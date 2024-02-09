@@ -2,7 +2,7 @@
   "name": "olympicvengeance",
   "version": "1.0.0",
   "description": "Jeu Olympic Vengeance",
-  "main": "app.ts",
+  "main": "src/app.ts",
   "scripts": {
     "build": "webpack",
     "start": "webpack-dev-server --port 8080",
