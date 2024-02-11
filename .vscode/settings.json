@@ -1,3 +1,7 @@
 {
-    "docwriter.language": "French"
+    "docwriter.language": "French",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "eslint.validate": ["javascript"]
 }
