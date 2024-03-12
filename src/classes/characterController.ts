@@ -1,9 +1,9 @@
-import { ActionManager, AnimationGroup, ExecuteCodeAction, Mesh, Observable, Scene, ShadowGenerator, Sound, TransformNode, UniversalCamera, Vector3 } from "@babylonjs/core";
+import { ActionManager, AnimationGroup, ArcRotateCamera, ExecuteCodeAction, Mesh, Observable, Scene, ShadowGenerator, Sound, TransformNode, UniversalCamera, Vector3 } from "@babylonjs/core";
 
 export class Player extends TransformNode {
     public camera: UniversalCamera;
     public scene: Scene;
-   /** private _input: PLayerInput: */
+    private _input;
 
     //Player
     public mesh: Mesh; //outer collisionbox of player
@@ -26,9 +26,9 @@ export class Player extends TransformNode {
     private _jumped: boolean = false;
 
     //const values
-    private static readonly PLAYER_SPEED: number = 0.45;
-    private static readonly JUMP_FORCE: number = 0.80;
-    private static readonly GRAVITY: number = -2.8;
+    private static PLAYER_SPEED: number = 0.45;
+    private static JUMP_FORCE: number = 0.80;
+    private static GRAVITY: number = -2.8;
     // private static readonly DASH_FACTOR: number = 2.5;
     // private static readonly DASH_TIME: number = 10; //how many frames the dash lasts
     // private static readonly DOWN_TILT: Vector3 = new Vector3(0.8290313946973066, 0, 0);
@@ -64,10 +64,16 @@ export class Player extends TransformNode {
     //observables
     public onRun = new Observable();
 
+    private _setupPlayerCamera() {
+        var camera4 = new ArcRotateCamera("arc", -Math.PI/2, Math.PI/2, 40, new Vector3(0,3,0), this.scene);
+    }
 
-    constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, /**input?: PlayerInput **/) {
+
+    constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
         super("player", scene);
         this.scene = scene;
+        this._setupPlayerCamera();
+
 
         // //set up sounds
         // this._loadSounds(this.scene);
@@ -75,6 +81,7 @@ export class Player extends TransformNode {
         // this._setupPlayerCamera();
         this.mesh = assets.mesh;
         this.mesh.parent = this;
+        this._input = input;
 
         this.scene.getLightByName("sparklight").parent = this.scene.getTransformNodeByName("Empty");
 

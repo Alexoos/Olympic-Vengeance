@@ -1,13 +1,14 @@
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, FreeCamera, Color4 } from "@babylonjs/core";
+import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, Mesh, MeshBuilder, FreeCamera, Color4, Matrix, Quaternion,SceneLoader, Color3, StandardMaterial } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
 enum State { START = 0, GAME = 1, LOSE = 2, CUTSCENE = 3 }
 
 class App {
     // General Entire Application
+    public assets;
     private _scene: Scene;
     private _canvas: HTMLCanvasElement;
     private _engine: Engine;
@@ -173,9 +174,55 @@ class App {
         });
     }
 
+    private async _loadCharacterAssets(scene): Promise<any> {
+
+        async function loadCharacter() {
+            //collision mesh
+            const outer = MeshBuilder.CreateBox("outer", { width: 2, depth: 1, height: 3 }, scene);
+            outer.isVisible = false;
+            outer.isPickable = false;
+            outer.checkCollisions = true;
+
+            //move origin of box collider to the bottom of the mesh (to match player mesh)
+            outer.bakeTransformIntoVertices(Matrix.Translation(0, 1.5, 0))
+            //for collisions
+            outer.ellipsoid = new Vector3(1, 1.5, 1);
+            outer.ellipsoidOffset = new Vector3(0, 1.5, 0);
+
+            outer.rotationQuaternion = new Quaternion(0, 1, 0, 0); // rotate the player mesh 180 since we want to see the back of the player
+            var box = MeshBuilder.CreateBox("Small1", { width: 0.5, depth: 0.5, height: 0.25, faceColors: [new Color4(0, 0, 0, 1), new Color4(0, 0, 0, 1), new Color4(0, 0, 0, 1), new Color4(0, 0, 0, 1), new Color4(0, 0, 0, 1), new Color4(0, 0, 0, 1)] }, scene);
+            box.position.y = 1.5;
+            box.position.z = 1;
+
+            //--IMPORTING MESH--
+            return SceneLoader.ImportMeshAsync(null, "./models/", "player.glb", scene).then((result) =>{
+                const root = result.meshes[0];
+                //body is our actual player mesh
+                const body = root;
+                body.parent = outer;
+                body.isPickable = false;
+                body.getChildMeshes().forEach(m => {
+                    m.isPickable = false;
+                })
+                
+                //return the mesh and animations
+                return {
+                    mesh: outer as Mesh,
+                    animationGroups: result.animationGroups
+                }
+            });
+        }
+
+        return loadCharacter().then(assets => {
+            this.assets = assets;
+        });
+    }
+
+
     private async _setUpGame() {
         let scene = new Scene(this._engine);
         this._gamescene = scene;
+        await this._loadCharacterAssets(scene)
     
         //...load assets
     }
