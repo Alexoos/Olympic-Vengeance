@@ -22,6 +22,7 @@ import {
 import { AdvancedDynamicTexture, Button, Control } from '@babylonjs/gui';
 import { Player } from './classes/characterController';
 import { Environment } from './environment';
+import { PlayerInput } from './classes/inputController';
 
 enum State {
   START = 0,
@@ -43,6 +44,7 @@ class App {
   private _cutScene: Scene;
   private _player: Player;
   private _environment: Environment;
+  private _input: PlayerInput;
 
   constructor() {
     this._canvas = this._createCanvas();
@@ -272,7 +274,10 @@ class App {
     shadowGenerator.darkness = 0.4;
 
     //Create the player
-    this._player = new Player(this.assets, scene, shadowGenerator); //dont have inputs yet so we dont need to pass it in
+    this._player = new Player(this.assets, scene, shadowGenerator, this._input); //dont have inputs yet so we dont need to pass it in
+
+    //player camera
+    const camera = this._player.activatePlayerCamera();
   }
 
   private async _setUpGame() {
@@ -288,6 +293,9 @@ class App {
     this._scene.detachControl();
     let scene = this._gamescene;
     await this._initializeGameAsync(scene);
+
+    //--INPUT--
+    this._input = new PlayerInput(scene); //detect keyboard/mobile inputs
 
     //--GUI--
     const playerUI = AdvancedDynamicTexture.CreateFullscreenUI('UI');

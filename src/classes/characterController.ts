@@ -92,7 +92,7 @@ export class Player extends TransformNode {
     this._input = input;
   }
 
-  private _setupPlayerCamera() : UniversalCamera {
+  private _setupPlayerCamera(): UniversalCamera {
     //root camera parent that handles positioning of the camera to follow the player
     this._camRoot = new TransformNode('root');
     this._camRoot.position = new Vector3(0, 0, 0); //initialized at (0,0,0)
@@ -109,7 +109,7 @@ export class Player extends TransformNode {
     //our actual camera that's pointing at our root's position
     this.camera = new UniversalCamera('cam', new Vector3(0, 0, -30), this.scene);
     this.camera.lockedTarget = this._camRoot.position;
-    this.camera.fov = 0.30;
+    this.camera.fov = 0.3;
     this.camera.parent = yTilt;
 
     this.scene.activeCamera = this.camera;
@@ -123,5 +123,50 @@ export class Player extends TransformNode {
       new Vector3(this.mesh.position.x, centerPlayer, this.mesh.position.z),
       0.4,
     );
+  }
+
+  private _updateFromControls(): void {
+    this._moveDirection = Vector3.Zero(); // vector that holds movement information
+    this._h = this._input.horizontal; //x-axis
+    this._v = this._input.vertical; //z-axis
+
+    //--MOVEMENTS BASED ON CAMERA (as it rotates)--
+    let fwd = this._camRoot.forward;
+    let right = this._camRoot.right;
+    let correctedVertical = fwd.scaleInPlace(this._v);
+    let correctedHorizontal = right.scaleInPlace(this._h);
+
+    //movement based off of camera's view
+    let move = correctedHorizontal.addInPlace(correctedVertical);
+
+    //clear y so that the character doesnt fly up, normalize for next step
+    this._moveDirection = new Vector3(move.normalize().x, 0, move.normalize().z);
+
+    //clamp the input value so that diagonal movement isn't twice as fast
+    let inputMag = Math.abs(this._h) + Math.abs(this._v);
+    if (inputMag < 0) {
+      this._inputAmt = 0;
+    } else if (inputMag > 1) {
+      this._inputAmt = 1;
+    } else {
+      this._inputAmt = inputMag;
+    }
+
+    //final movement that takes into consideration the inputs
+    this._moveDirection = this._moveDirection.scaleInPlace(this._inputAmt * Player.PLAYER_SPEED);
+  }
+
+  public activatePlayerCamera(): UniversalCamera {
+    this.scene.registerBeforeRender(() => {
+      this._beforeRenderUpdate();
+      this._updateCamera();
+    });
+    return this.camera;
+  }
+
+  private _beforeRenderUpdate(): void {
+    this._updateFromControls();
+    //move our mesh
+    this.mesh.moveWithCollisions(this._moveDirection);
   }
 }
