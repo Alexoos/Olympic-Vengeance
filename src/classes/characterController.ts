@@ -5,6 +5,8 @@ import {
   ExecuteCodeAction,
   Mesh,
   Observable,
+  Quaternion,
+  Ray,
   Scene,
   ShadowGenerator,
   Sound,
@@ -12,11 +14,12 @@ import {
   UniversalCamera,
   Vector3,
 } from '@babylonjs/core';
+import { PlayerInput } from './inputController';
 
 export class Player extends TransformNode {
   public camera: UniversalCamera;
   public scene: Scene;
-  private _input;
+  private _input: PlayerInput;
 
   //Player
   public mesh: Mesh; //outer collisionbox of player
@@ -40,8 +43,8 @@ export class Player extends TransformNode {
 
   //const values
   private static PLAYER_SPEED: number = 0.45;
-  private static JUMP_FORCE: number = 0.8;
-  private static GRAVITY: number = -2.8;
+  private static JUMP_FORCE: number = 0.3;
+  private static GRAVITY: number = -10;
   // private static readonly DASH_FACTOR: number = 2.5;
   // private static readonly DASH_TIME: number = 10; //how many frames the dash lasts
   // private static readonly DOWN_TILT: Vector3 = new Vector3(0.8290313946973066, 0, 0);
@@ -61,10 +64,10 @@ export class Player extends TransformNode {
   // private _canDash: boolean = true;
 
   //gravity, ground detection, jumping
-  private _gravity: Vector3 = new Vector3();
   private _lastGroundPos: Vector3 = Vector3.Zero(); // keep track of the last grounded position
-  private _grounded: boolean;
   private _jumpCount: number = 1;
+  private _gravity: Vector3 = new Vector3();
+  private _grounded: boolean;
 
   //sfx
   //  public lightSfx: Sound;
@@ -126,6 +129,8 @@ export class Player extends TransformNode {
   }
 
   private _updateFromControls(): void {
+    this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+
     this._moveDirection = Vector3.Zero(); // vector that holds movement information
     this._h = this._input.horizontal; //x-axis
     this._v = this._input.vertical; //z-axis
@@ -154,6 +159,92 @@ export class Player extends TransformNode {
 
     //final movement that takes into consideration the inputs
     this._moveDirection = this._moveDirection.scaleInPlace(this._inputAmt * Player.PLAYER_SPEED);
+
+    //check if there is movement to determine if rotation is needed
+    let input = new Vector3(this._input.horizontalAxis, 0, this._input.verticalAxis); //along which axis is the direction
+    if (input.length() == 0) {
+      //if there's no input detected, prevent rotation and keep player in same rotation
+      return;
+    }
+
+    //rotation based on input & the camera angle
+    let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
+    angle += this._camRoot.rotation.y;
+    let targ = Quaternion.FromEulerAngles(0, angle, 0);
+    this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 10 * this._deltaTime);
+  }
+
+  //--GROUND DETECTION--
+  //Send raycast to the floor to detect if there are any hits with meshes below the character
+  private _floorRaycast(offsetx: number, offsetz: number, raycastlen: number): Vector3 {
+    //position the raycast from bottom center of mesh
+    let raycastFloorPos = new Vector3(
+      this.mesh.position.x + offsetx,
+      this.mesh.position.y + 0.5,
+      this.mesh.position.z + offsetz,
+    );
+    let ray = new Ray(raycastFloorPos, Vector3.Up().scale(-1), raycastlen);
+
+    //defined which type of meshes should be pickable
+    let predicate = function (mesh) {
+      return mesh.isPickable && mesh.isEnabled();
+    };
+
+    let pick = this.scene.pickWithRay(ray, predicate);
+
+    if (pick.hit) {
+      //grounded
+      return pick.pickedPoint;
+    } else {
+      //not grounded
+      return Vector3.Zero();
+    }
+  }
+
+  //raycast from the center of the player to check for whether player is grounded
+  private _isGrounded(): boolean {
+    if (this._floorRaycast(0, 0, 0.3).equals(Vector3.Zero())) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+  private _updateGroundDetection(): void {
+    this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+
+    if (!this._isGrounded()) {
+      //if the body isnt grounded, check if it's on a slope and was either falling or walking onto it
+      if (this._gravity.y <= 0) {
+        this._gravity.y = 0;
+        this._jumpCount = 1;
+        this._grounded = true;
+      } else {
+        //keep applying gravity
+        this._gravity = this._gravity.addInPlace(Vector3.Up().scale(this._deltaTime * Player.GRAVITY));
+        this._grounded = false;
+      }
+    }
+
+    //limit the speed of gravity to the negative of the jump power
+    if (this._gravity.y < -Player.JUMP_FORCE) {
+      this._gravity.y = -Player.JUMP_FORCE;
+    }
+
+    this.mesh.moveWithCollisions(this._moveDirection.addInPlace(this._gravity));
+
+    if (this._isGrounded()) {
+      this._gravity.y = 0;
+      this._grounded = true;
+      this._lastGroundPos.copyFrom(this.mesh.position);
+
+      this._jumpCount = 1; //allow for jumping
+    }
+
+    //Jump detection
+    if (this._input.jumpKeyDown && this._jumpCount > 0) {
+      this._gravity.y = Player.JUMP_FORCE;
+      this._jumpCount--;
+    }
   }
 
   public activatePlayerCamera(): UniversalCamera {
@@ -166,7 +257,6 @@ export class Player extends TransformNode {
 
   private _beforeRenderUpdate(): void {
     this._updateFromControls();
-    //move our mesh
-    this.mesh.moveWithCollisions(this._moveDirection);
+    this._updateGroundDetection();
   }
 }

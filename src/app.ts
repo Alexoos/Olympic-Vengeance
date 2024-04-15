@@ -274,7 +274,7 @@ class App {
     shadowGenerator.darkness = 0.4;
 
     //Create the player
-    this._player = new Player(this.assets, scene, shadowGenerator, this._input); //dont have inputs yet so we dont need to pass it in
+    this._player = new Player(this.assets, scene, shadowGenerator, this._input);
 
     //player camera
     const camera = this._player.activatePlayerCamera();
@@ -292,10 +292,12 @@ class App {
     //--SETUP SCENE--
     this._scene.detachControl();
     let scene = this._gamescene;
-    await this._initializeGameAsync(scene);
+    0;
 
     //--INPUT--
     this._input = new PlayerInput(scene); //detect keyboard/mobile inputs
+
+    await this._initializeGameAsync(scene);
 
     //--GUI--
     const playerUI = AdvancedDynamicTexture.CreateFullscreenUI('UI');
