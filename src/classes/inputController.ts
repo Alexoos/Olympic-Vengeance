@@ -11,7 +11,7 @@ export class PlayerInput {
   //tracks whether or not there is movement in that axis
   public horizontalAxis: number = 0;
   public verticalAxis: number = 0;
-  public jumpKeyDown: boolean;
+  public sprinting : boolean;
   public dashing: boolean;
 
   constructor(scene: Scene) {
@@ -35,10 +35,10 @@ export class PlayerInput {
   }
 
   private _updateFromKeyboard(): void {
-    if (this.inputMap['ArrowUp']) {
+    if (this.inputMap['z']) {
       this.vertical = Scalar.Lerp(this.vertical, 1, 0.02);
       this.verticalAxis = 1;
-    } else if (this.inputMap['ArrowDown']) {
+    } else if (this.inputMap['s']) {
       this.vertical = Scalar.Lerp(this.vertical, -1, 0.02);
       this.verticalAxis = -1;
     } else {
@@ -46,28 +46,22 @@ export class PlayerInput {
       this.verticalAxis = 0;
     }
 
-    if (this.inputMap['ArrowLeft']) {
+    if (this.inputMap['q']) {
       this.horizontal = Scalar.Lerp(this.horizontal, -1, 0.02);
       this.horizontalAxis = -1;
-    } else if (this.inputMap['ArrowRight']) {
+    } else if (this.inputMap['d']) {
       this.horizontal = Scalar.Lerp(this.horizontal, 1, 0.02);
       this.horizontalAxis = 1;
     } else {
       this.horizontal = 0;
       this.horizontalAxis = 0;
     }
-    //dash
+    //sprint
     if (this.inputMap['Shift']) {
-      this.dashing = true;
+      this.sprinting = true;
     } else {
-      this.dashing = false;
+      this.sprinting = false;
     }
 
-    //Jump Checks (SPACE)
-    if (this.inputMap[' ']) {
-      this.jumpKeyDown = true;
-    } else {
-      this.jumpKeyDown = false;
-    }
   }
 }

@@ -31,8 +31,10 @@ export class Player extends TransformNode {
   //animations
   private _run: AnimationGroup;
   private _idle: AnimationGroup;
-  private _jump: AnimationGroup;
-  private _land: AnimationGroup;
+  private _walk: AnimationGroup;
+  private _attack: AnimationGroup;
+  private _block: AnimationGroup;
+  private _damage: AnimationGroup;
   private _dash: AnimationGroup;
 
   // animation trackers
@@ -42,7 +44,7 @@ export class Player extends TransformNode {
   private _jumped: boolean = false;
 
   //const values
-  private static PLAYER_SPEED: number = 0.45;
+  private static PLAYER_SPEED: number = 0.05;
   private static JUMP_FORCE: number = 0.3;
   private static GRAVITY: number = -10;
   // private static readonly DASH_FACTOR: number = 2.5;
@@ -65,7 +67,6 @@ export class Player extends TransformNode {
 
   //gravity, ground detection, jumping
   private _lastGroundPos: Vector3 = Vector3.Zero(); // keep track of the last grounded position
-  private _jumpCount: number = 1;
   private _gravity: Vector3 = new Vector3();
   private _grounded: boolean;
 
@@ -81,7 +82,7 @@ export class Player extends TransformNode {
   public onRun = new Observable();
 
   constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
-    super('player', scene);
+    super('kolasis', scene);
     this.scene = scene;
     this._setupPlayerCamera();
 
@@ -93,6 +94,16 @@ export class Player extends TransformNode {
     shadowGenerator.addShadowCaster(assets.mesh);
 
     this._input = input;
+
+    this._idle = assets.animationGroups[3];
+    this._walk = assets.animationGroups[5];
+    this._run = assets.animationGroups[4];
+    this._attack = assets.animationGroups[2];
+    //this._block = assets.animationGoups[4];
+    //this._damage = assets.animationGoups[5];
+
+    this._setUpAnimations();
+    //this._dash = assets.animationGroups[0];
   }
 
   private _setupPlayerCamera(): UniversalCamera {
@@ -158,6 +169,12 @@ export class Player extends TransformNode {
     }
 
     //final movement that takes into consideration the inputs
+    if (this._input.sprinting) {
+      Player.PLAYER_SPEED = 0.15;
+    } else {
+      Player.PLAYER_SPEED = 0.05;
+    }
+
     this._moveDirection = this._moveDirection.scaleInPlace(this._inputAmt * Player.PLAYER_SPEED);
 
     //check if there is movement to determine if rotation is needed
@@ -171,7 +188,7 @@ export class Player extends TransformNode {
     let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
     angle += this._camRoot.rotation.y;
     let targ = Quaternion.FromEulerAngles(0, angle, 0);
-    this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 10 * this._deltaTime);
+    this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 5 * this._deltaTime);
   }
 
   //--GROUND DETECTION--
@@ -216,7 +233,6 @@ export class Player extends TransformNode {
       //if the body isnt grounded, check if it's on a slope and was either falling or walking onto it
       if (this._gravity.y <= 0) {
         this._gravity.y = 0;
-        this._jumpCount = 1;
         this._grounded = true;
       } else {
         //keep applying gravity
@@ -236,14 +252,47 @@ export class Player extends TransformNode {
       this._gravity.y = 0;
       this._grounded = true;
       this._lastGroundPos.copyFrom(this.mesh.position);
-
-      this._jumpCount = 1; //allow for jumping
     }
+  }
 
-    //Jump detection
-    if (this._input.jumpKeyDown && this._jumpCount > 0) {
-      this._gravity.y = Player.JUMP_FORCE;
-      this._jumpCount--;
+  private _setUpAnimations(): void {
+    this.scene.stopAllAnimations();
+    this._walk.loopAnimation = true;
+    this._run.loopAnimation = true;
+    this._idle.loopAnimation = true;
+
+    //initialize current and previous
+    this._currentAnim = this._idle;
+    this._prevAnim = this._idle;
+  }
+
+  private _animatePlayer(): void {
+    this._currentAnim = this._idle;
+
+    if (
+      (this._input.inputMap['z'] ||
+        this._input.inputMap['s'] ||
+        this._input.inputMap['q'] ||
+        this._input.inputMap['d']) &&
+      !this._input.inputMap['Shift']
+    ) {
+      this._currentAnim = this._walk;
+    } else if (
+      (this._input.inputMap['z'] ||
+        this._input.inputMap['s'] ||
+        this._input.inputMap['q'] ||
+        this._input.inputMap['d']) &&
+      this._input.inputMap['Shift']
+    ) {
+      this._currentAnim = this._run;
+    } else if (this._input.inputMap['left_click']) {
+      this._currentAnim = this._attack;
+    }
+    if (this._currentAnim != null && this._prevAnim !== this._currentAnim) {
+      //Animations
+      this._prevAnim.stop();
+      this._currentAnim.play(this._currentAnim.loopAnimation);
+      this._prevAnim = this._currentAnim;
     }
   }
 
@@ -258,5 +307,6 @@ export class Player extends TransformNode {
   private _beforeRenderUpdate(): void {
     this._updateFromControls();
     this._updateGroundDetection();
+    this._animatePlayer();
   }
 }

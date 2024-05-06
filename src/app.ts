@@ -238,7 +238,7 @@ class App {
       box.position.z = 1;
 
       //--IMPORTING MESH--
-      return SceneLoader.ImportMeshAsync(null, './models/', 'player.glb', scene).then((result) => {
+      return SceneLoader.ImportMeshAsync(null, './models/', 'kolasis.glb', scene).then((result) => {
         const root = result.meshes[0];
         //body is our actual player mesh
         const body = root;
