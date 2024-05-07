@@ -23,6 +23,7 @@ import { AdvancedDynamicTexture, Button, Control } from '@babylonjs/gui';
 import { Player } from './classes/characterController';
 import { Environment } from './environment';
 import { PlayerInput } from './classes/inputController';
+import EnnemyManager from './classes/EnnemyManager';
 
 enum State {
   START = 0,
@@ -45,6 +46,7 @@ class App {
   private _player: Player;
   private _environment: Environment;
   private _input: PlayerInput;
+  private _ennemyManager: EnnemyManager;
 
   constructor() {
     this._canvas = this._createCanvas();
@@ -307,6 +309,11 @@ class App {
     const environment = new Environment(scene);
     this._environment = environment; //class variable for App
     await this._environment.load(); //environment
+
+    //--CREATE ENNEMIES--
+    this._ennemyManager = new EnnemyManager();
+    await this._ennemyManager.init();
+    this.
 
     //--WHEN SCENE FINISHED LOADING--
     await scene.whenReadyAsync();

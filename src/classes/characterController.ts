@@ -44,7 +44,8 @@ export class Player extends TransformNode {
   private _jumped: boolean = false;
 
   //const values
-  private static PLAYER_SPEED: number = 0.05;
+  private static NORMAL_SPEED: number = 0.05;
+  private static SPRINT_SPEED: number = 0.15;
   private static JUMP_FORCE: number = 0.3;
   private static GRAVITY: number = -10;
   // private static readonly DASH_FACTOR: number = 2.5;
@@ -98,8 +99,8 @@ export class Player extends TransformNode {
     this._idle = assets.animationGroups[3];
     this._walk = assets.animationGroups[5];
     this._run = assets.animationGroups[4];
-    this._attack = assets.animationGroups[2];
-    //this._block = assets.animationGoups[4];
+    this._attack = assets.animationGroups[0];
+    this._block = assets.animationGroups[1];
     //this._damage = assets.animationGoups[5];
 
     this._setUpAnimations();
@@ -158,24 +159,10 @@ export class Player extends TransformNode {
     //clear y so that the character doesnt fly up, normalize for next step
     this._moveDirection = new Vector3(move.normalize().x, 0, move.normalize().z);
 
-    //clamp the input value so that diagonal movement isn't twice as fast
-    let inputMag = Math.abs(this._h) + Math.abs(this._v);
-    if (inputMag < 0) {
-      this._inputAmt = 0;
-    } else if (inputMag > 1) {
-      this._inputAmt = 1;
-    } else {
-      this._inputAmt = inputMag;
-    }
-
     //final movement that takes into consideration the inputs
-    if (this._input.sprinting) {
-      Player.PLAYER_SPEED = 0.15;
-    } else {
-      Player.PLAYER_SPEED = 0.05;
-    }
+    let speed = this._input.sprinting ? Player.SPRINT_SPEED : Player.NORMAL_SPEED;
 
-    this._moveDirection = this._moveDirection.scaleInPlace(this._inputAmt * Player.PLAYER_SPEED);
+    this._moveDirection = this._moveDirection.normalize().scale(speed);
 
     //check if there is movement to determine if rotation is needed
     let input = new Vector3(this._input.horizontalAxis, 0, this._input.verticalAxis); //along which axis is the direction
@@ -274,7 +261,7 @@ export class Player extends TransformNode {
         this._input.inputMap['s'] ||
         this._input.inputMap['q'] ||
         this._input.inputMap['d']) &&
-      !this._input.inputMap['Shift']
+      !this._input.sprinting
     ) {
       this._currentAnim = this._walk;
     } else if (
@@ -282,11 +269,13 @@ export class Player extends TransformNode {
         this._input.inputMap['s'] ||
         this._input.inputMap['q'] ||
         this._input.inputMap['d']) &&
-      this._input.inputMap['Shift']
+      this._input.sprinting
     ) {
       this._currentAnim = this._run;
-    } else if (this._input.inputMap['left_click']) {
+    } else if (this._input.attacking) {
       this._currentAnim = this._attack;
+    } else if (this._input.blocking) {
+      this._currentAnim = this._block;
     }
     if (this._currentAnim != null && this._prevAnim !== this._currentAnim) {
       //Animations

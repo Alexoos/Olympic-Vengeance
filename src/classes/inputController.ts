@@ -11,7 +11,9 @@ export class PlayerInput {
   //tracks whether or not there is movement in that axis
   public horizontalAxis: number = 0;
   public verticalAxis: number = 0;
-  public sprinting : boolean;
+  public sprinting: boolean;
+  public attacking: boolean;
+  public blocking: boolean;
   public dashing: boolean;
 
   constructor(scene: Scene) {
@@ -56,6 +58,7 @@ export class PlayerInput {
       this.horizontal = 0;
       this.horizontalAxis = 0;
     }
+
     //sprint
     if (this.inputMap['Shift']) {
       this.sprinting = true;
@@ -63,5 +66,18 @@ export class PlayerInput {
       this.sprinting = false;
     }
 
+    //attacking
+    if (this.inputMap['e']) {
+      this.attacking = true;
+    } else {
+      this.attacking = false;
+    }
+
+    //blocking
+    if (this.inputMap['a']) {
+      this.blocking = true;
+    } else {
+      this.blocking = false;
+    }
   }
 }
