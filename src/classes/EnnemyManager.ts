@@ -8,12 +8,12 @@ class EnnemyManager {
   constructor() {}
 
   async init() {
+    //a modifier pour faire spawn en random et le nombre aussi en random
     for (let i = 0; i < MAX_GOBLIN; i++) {
-      let goblin = new Goblin();
-      await goblin.init();
-      goblin.spawn(new Vector3(0, 0, 0));
-
-      this.goblins.push(goblin);
+      //let goblin = new Goblin();
+      //await goblin.init();
+      //goblin.spawn(new Vector3(0, 0, 0));
+      //this.goblins.push(goblin);
     }
   }
 

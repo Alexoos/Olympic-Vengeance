@@ -24,6 +24,7 @@ import { Player } from './classes/characterController';
 import { Environment } from './environment';
 import { PlayerInput } from './classes/inputController';
 import EnnemyManager from './classes/EnnemyManager';
+import Goblin from './classes/Goblin';
 
 enum State {
   START = 0,
@@ -44,6 +45,7 @@ class App {
   private _gamescene: Scene;
   private _cutScene: Scene;
   private _player: Player;
+  private _goblin: Goblin;
   private _environment: Environment;
   private _input: PlayerInput;
   private _ennemyManager: EnnemyManager;
@@ -278,6 +280,10 @@ class App {
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
 
+    //Ennemy creation
+    this._goblin = new Goblin(scene);
+    await this._goblin.init();
+
     //player camera
     const camera = this._player.activatePlayerCamera();
   }
@@ -311,18 +317,22 @@ class App {
     await this._environment.load(); //environment
 
     //--CREATE ENNEMIES--
-    this._ennemyManager = new EnnemyManager();
-    await this._ennemyManager.init();
-    this.
+
+    //this._ennemyManager = new EnnemyManager();
+    //await this._ennemyManager.init();
 
     //--WHEN SCENE FINISHED LOADING--
     await scene.whenReadyAsync();
-    scene.getMeshByName('outer').position = new Vector3(0, 3, 0);
+    // a modifier pour peut etre faire spawn en random ? dans la map
+    scene.getMeshByName('outer').position = new Vector3(0, 1, 0);
     //get rid of start scene, switch to gamescene and change states
     this._scene.dispose();
     this._state = State.GAME;
     this._scene = scene;
     this._engine.hideLoadingUI();
+
+    this._goblin.spawn(new Vector3(10, 2, 2));
+    this._goblin.update(this._player.getPosition());
     //the game is ready, attach control back
     this._scene.attachControl();
   }

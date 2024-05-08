@@ -23,6 +23,8 @@ export class Player extends TransformNode {
 
   //Player
   public mesh: Mesh; //outer collisionbox of player
+  private life = 100;
+  private damage = 20;
 
   //Camera
   private _camRoot: TransformNode;
@@ -228,11 +230,6 @@ export class Player extends TransformNode {
       }
     }
 
-    //limit the speed of gravity to the negative of the jump power
-    if (this._gravity.y < -Player.JUMP_FORCE) {
-      this._gravity.y = -Player.JUMP_FORCE;
-    }
-
     this.mesh.moveWithCollisions(this._moveDirection.addInPlace(this._gravity));
 
     if (this._isGrounded()) {
@@ -297,5 +294,9 @@ export class Player extends TransformNode {
     this._updateFromControls();
     this._updateGroundDetection();
     this._animatePlayer();
+  }
+
+  public getPosition() {
+    return this.mesh.absolutePosition;
   }
 }
