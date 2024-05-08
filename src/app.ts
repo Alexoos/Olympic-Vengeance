@@ -280,9 +280,8 @@ class App {
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
 
-    //Ennemy creation
-    this._goblin = new Goblin(scene);
-    await this._goblin.init();
+    this._goblin = new Goblin();
+    this._goblin.init();
 
     //player camera
     const camera = this._player.activatePlayerCamera();
@@ -300,7 +299,6 @@ class App {
     //--SETUP SCENE--
     this._scene.detachControl();
     let scene = this._gamescene;
-    0;
 
     //--INPUT--
     this._input = new PlayerInput(scene); //detect keyboard/mobile inputs
@@ -331,10 +329,11 @@ class App {
     this._scene = scene;
     this._engine.hideLoadingUI();
 
-    this._goblin.spawn(new Vector3(10, 2, 2));
-    this._goblin.update(this._player.getPosition());
     //the game is ready, attach control back
     this._scene.attachControl();
+
+    //this._goblin.spawn(new Vector3(5, 2, 2));
+    this._goblin.update(this._player.getPosition());
   }
 
   private async _goToLose(): Promise<void> {

@@ -57,7 +57,7 @@ export class Player extends TransformNode {
   // public dashTime: number = 0;
 
   //player movement vars
-  private _deltaTime: number = 0;
+  public _deltaTime: number = 0;
   private _h: number;
   private _v: number;
 
@@ -83,6 +83,7 @@ export class Player extends TransformNode {
 
   //observables
   public onRun = new Observable();
+  static _deltaTime: number;
 
   constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
     super('kolasis', scene);
