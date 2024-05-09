@@ -283,7 +283,6 @@ class App {
 
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
-    this._player.mesh.position = new Vector3(-7.960204541803591e-17, -27.396801101454653, 0.65);
    
 
     this._goblin = new Goblin();

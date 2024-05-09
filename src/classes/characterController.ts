@@ -214,11 +214,6 @@ export class Player extends TransformNode {
     }
   }
 
-  //raycast from the center of the player to check for whether player is grounded
-  private _isGrounded(): boolean {
-    let groundPoint = this._floorRaycast(0, 0, 1.5); // Modifiez la distance selon la taille du personnage
-    return !groundPoint.equals(Vector3.Zero());
-  }
 
   private _updateGroundDetection(): void {
     let groundPoint = this._floorRaycast(0, 0, 2);

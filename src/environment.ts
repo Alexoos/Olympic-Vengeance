@@ -34,7 +34,7 @@ export class Environment {
 
       // Ajuster les propriétés du modèle (position, échelle, etc.)
       if (this._model) {
-        this._model.position = new Vector3(0, 0, 0); // Ajuster la position selon vos besoins
+        this._model.position = new Vector3(0, 27, 0); // Ajuster la position selon vos besoins
         this._model.scaling = new Vector3(450, 200, 450); // Modifier l'échelle
       }
 
