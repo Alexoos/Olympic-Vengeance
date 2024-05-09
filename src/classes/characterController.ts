@@ -46,8 +46,8 @@ export class Player extends TransformNode {
   private _jumped: boolean = false;
 
   //const values
-  private static NORMAL_SPEED: number = 0.05;
-  private static SPRINT_SPEED: number = 0.15;
+  private static NORMAL_SPEED: number = 0.17;
+  private static SPRINT_SPEED: number = 0.35;
   private static JUMP_FORCE: number = 0.3;
   private static GRAVITY: number = -10;
   // private static readonly DASH_FACTOR: number = 2.5;
@@ -94,6 +94,7 @@ export class Player extends TransformNode {
     // this._loadSounds(this.scene);
     this.mesh = assets.mesh;
     this.mesh.parent = this;
+    
 
     shadowGenerator.addShadowCaster(assets.mesh);
 
@@ -105,10 +106,12 @@ export class Player extends TransformNode {
     this._attack = assets.animationGroups[0];
     this._block = assets.animationGroups[1];
     //this._damage = assets.animationGoups[5];
+  
 
     this._setUpAnimations();
     //this._dash = assets.animationGroups[0];
   }
+
 
   private _setupPlayerCamera(): UniversalCamera {
     //root camera parent that handles positioning of the camera to follow the player
@@ -125,7 +128,7 @@ export class Player extends TransformNode {
     yTilt.parent = this._camRoot;
 
     //our actual camera that's pointing at our root's position
-    this.camera = new UniversalCamera('cam', new Vector3(0, 0, -30), this.scene);
+    this.camera = new UniversalCamera('cam', new Vector3(0, 0, -60), this.scene);
     this.camera.lockedTarget = this._camRoot.position;
     this.camera.fov = 0.3;
     this.camera.parent = yTilt;
@@ -142,6 +145,7 @@ export class Player extends TransformNode {
       0.4,
     );
   }
+  
 
   private _updateFromControls(): void {
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
@@ -173,6 +177,8 @@ export class Player extends TransformNode {
       //if there's no input detected, prevent rotation and keep player in same rotation
       return;
     }
+    this.getLogPosition();
+    
 
     //rotation based on input & the camera angle
     let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
@@ -210,34 +216,25 @@ export class Player extends TransformNode {
 
   //raycast from the center of the player to check for whether player is grounded
   private _isGrounded(): boolean {
-    if (this._floorRaycast(0, 0, 0.3).equals(Vector3.Zero())) {
-      return false;
-    } else {
-      return true;
-    }
+    let groundPoint = this._floorRaycast(0, 0, 1.5); // Modifiez la distance selon la taille du personnage
+    return !groundPoint.equals(Vector3.Zero());
   }
+
   private _updateGroundDetection(): void {
-    this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
-
-    if (!this._isGrounded()) {
-      //if the body isnt grounded, check if it's on a slope and was either falling or walking onto it
-      if (this._gravity.y <= 0) {
-        this._gravity.y = 0;
-        this._grounded = true;
-      } else {
-        //keep applying gravity
-        this._gravity = this._gravity.addInPlace(Vector3.Up().scale(this._deltaTime * Player.GRAVITY));
-        this._grounded = false;
-      }
-    }
-
-    this.mesh.moveWithCollisions(this._moveDirection.addInPlace(this._gravity));
-
-    if (this._isGrounded()) {
+    let groundPoint = this._floorRaycast(0, 0, 2);
+    if (!groundPoint.equals(Vector3.Zero())) {
+      // Positionne le joueur au niveau du sol détecté
+      this.mesh.position.y = groundPoint.y;
       this._gravity.y = 0;
       this._grounded = true;
-      this._lastGroundPos.copyFrom(this.mesh.position);
+    } else {
+      // Continue d'appliquer la gravité s'il n'est pas au sol
+      this._gravity = this._gravity.addInPlace(Vector3.Up().scale(this._deltaTime * Player.GRAVITY));
+      this._grounded = false;
     }
+
+    // Déplace le personnage avec les collisions
+    this.mesh.moveWithCollisions(this._moveDirection.addInPlace(this._gravity));
   }
 
   private _setUpAnimations(): void {
@@ -296,6 +293,11 @@ export class Player extends TransformNode {
     this._updateGroundDetection();
     this._animatePlayer();
   }
+
+  public getLogPosition() : void {
+    console.log("la position du personnage --->",this.mesh.position);
+  }
+
 
   public getPosition() {
     return this.mesh.absolutePosition;

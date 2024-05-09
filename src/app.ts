@@ -50,6 +50,7 @@ class App {
   private _input: PlayerInput;
   private _ennemyManager: EnnemyManager;
 
+
   constructor() {
     this._canvas = this._createCanvas();
 
@@ -277,11 +278,17 @@ class App {
     const shadowGenerator = new ShadowGenerator(1024, light);
     shadowGenerator.darkness = 0.4;
 
+    this._environment = new Environment(scene);
+    await this._environment.load();
+
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
+    this._player.mesh.position = new Vector3(-7.960204541803591e-17, -27.396801101454653, 0.65);
+   
 
     this._goblin = new Goblin();
     this._goblin.init();
+    this._goblin.spawn(new Vector3(5, 2, 2));
 
     //player camera
     const camera = this._player.activatePlayerCamera();
@@ -309,10 +316,10 @@ class App {
     const playerUI = AdvancedDynamicTexture.CreateFullscreenUI('UI');
     scene.detachControl();
 
-    //--CREATE ENVIRONMENT--
-    const environment = new Environment(scene);
-    this._environment = environment; //class variable for App
-    await this._environment.load(); //environment
+    // //--CREATE ENVIRONMENT--
+    // const environment = new Environment(scene);
+    // this._environment = environment; //class variable for App
+    // await this._environment.load(); //environment
 
     //--CREATE ENNEMIES--
 
