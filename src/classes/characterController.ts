@@ -94,7 +94,6 @@ export class Player extends TransformNode {
     // this._loadSounds(this.scene);
     this.mesh = assets.mesh;
     this.mesh.parent = this;
-    
 
     shadowGenerator.addShadowCaster(assets.mesh);
 
@@ -106,12 +105,9 @@ export class Player extends TransformNode {
     this._attack = assets.animationGroups[0];
     this._block = assets.animationGroups[1];
     //this._damage = assets.animationGoups[5];
-  
 
     this._setUpAnimations();
-    //this._dash = assets.animationGroups[0];
   }
-
 
   private _setupPlayerCamera(): UniversalCamera {
     //root camera parent that handles positioning of the camera to follow the player
@@ -145,7 +141,6 @@ export class Player extends TransformNode {
       0.4,
     );
   }
-  
 
   private _updateFromControls(): void {
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
@@ -178,7 +173,6 @@ export class Player extends TransformNode {
       return;
     }
     this.getLogPosition();
-    
 
     //rotation based on input & the camera angle
     let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
@@ -214,7 +208,6 @@ export class Player extends TransformNode {
     }
   }
 
-
   private _updateGroundDetection(): void {
     let groundPoint = this._floorRaycast(0, 0, 2);
     if (!groundPoint.equals(Vector3.Zero())) {
@@ -240,7 +233,7 @@ export class Player extends TransformNode {
 
     //initialize current and previous
     this._currentAnim = this._idle;
-    this._prevAnim = this._idle;
+    this._prevAnim = this._walk;
   }
 
   private _animatePlayer(): void {
@@ -289,10 +282,9 @@ export class Player extends TransformNode {
     this._animatePlayer();
   }
 
-  public getLogPosition() : void {
-    console.log("la position du personnage --->",this.mesh.position);
+  public getLogPosition(): void {
+    console.log('la position du personnage --->', this.mesh.position);
   }
-
 
   public getPosition() {
     return this.mesh.absolutePosition;

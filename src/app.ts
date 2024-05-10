@@ -50,7 +50,6 @@ class App {
   private _input: PlayerInput;
   private _ennemyManager: EnnemyManager;
 
-
   constructor() {
     this._canvas = this._createCanvas();
 
@@ -278,16 +277,15 @@ class App {
     const shadowGenerator = new ShadowGenerator(1024, light);
     shadowGenerator.darkness = 0.4;
 
+    //Create the environment
     this._environment = new Environment(scene);
     await this._environment.load();
 
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
-   
 
     this._goblin = new Goblin();
     this._goblin.init();
-    this._goblin.spawn(new Vector3(5, 2, 2));
 
     //player camera
     const camera = this._player.activatePlayerCamera();
@@ -315,11 +313,6 @@ class App {
     const playerUI = AdvancedDynamicTexture.CreateFullscreenUI('UI');
     scene.detachControl();
 
-    // //--CREATE ENVIRONMENT--
-    // const environment = new Environment(scene);
-    // this._environment = environment; //class variable for App
-    // await this._environment.load(); //environment
-
     //--CREATE ENNEMIES--
 
     //this._ennemyManager = new EnnemyManager();
@@ -328,7 +321,7 @@ class App {
     //--WHEN SCENE FINISHED LOADING--
     await scene.whenReadyAsync();
     // a modifier pour peut etre faire spawn en random ? dans la map
-    scene.getMeshByName('outer').position = new Vector3(0, 1, 0);
+    scene.getMeshByName('outer').position = new Vector3(0, 0, 0);
     //get rid of start scene, switch to gamescene and change states
     this._scene.dispose();
     this._state = State.GAME;
@@ -338,8 +331,9 @@ class App {
     //the game is ready, attach control back
     this._scene.attachControl();
 
-    //this._goblin.spawn(new Vector3(5, 2, 2));
-    this._goblin.update(this._player.getPosition());
+    this._engine.runRenderLoop(() => {
+      this._goblin.update(this._player.getPosition());
+    });
   }
 
   private async _goToLose(): Promise<void> {

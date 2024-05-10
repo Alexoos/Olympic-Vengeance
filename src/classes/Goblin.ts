@@ -7,8 +7,8 @@ const STATES = Object.freeze({
   STATE_FOLLOW: 20,
 });
 
-const NORMAL_SPEED = 0.05;
-const SPRINT_SPEED = 0.1;
+const NORMAL_SPEED = 0.1;
+const SPRINT_SPEED = 0.25;
 
 const LOOK_DISTANCE = 6;
 const SENS_DISTANCE = 20;
@@ -28,7 +28,6 @@ class Goblin {
 
   init() {
     this.mesh = MeshBuilder.CreateCapsule('goblin', { radius: 0.25, height: 1 });
-    this.mesh.position = new Vector3(0, 1, 0);
   }
 
   spawn(spawnPoint: Vector3) {
@@ -46,13 +45,14 @@ class Goblin {
     this.distanceFromPlayer = Vector3.Distance(this.mesh.absolutePosition, this.playerPosition);
 
     this.comportement();
+
     this.move();
   }
 
   move() {
     if (this.moveDirection.length() != 0) {
       this.moveDirection.y = 0;
-      this.moveDirection.scaleInPlace((this.speed * Player._deltaTime) / 1000.0);
+      this.moveDirection.scaleInPlace((this.speed * 0.02) / 1000.0);
       this.mesh.position.addInPlace(this.moveDirection);
     }
   }
@@ -76,9 +76,9 @@ class Goblin {
       this.state = STATES.STATE_SEARCH;
     } else {
       if (now > this.nextTargetTime) {
-        let x = Scalar.RandomRange(0, 5);
-        let y = 1;
-        let z = Scalar.RandomRange(0, 5);
+        let x = 50;
+        let y = 0;
+        let z = 0;
         this.targetPosition.set(x, y, z);
         this.nextTargetTime = now + 5000;
       }
