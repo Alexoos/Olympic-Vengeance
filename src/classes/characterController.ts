@@ -144,42 +144,35 @@ export class Player extends TransformNode {
 
   private _updateFromControls(): void {
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+    this._moveDirection = Vector3.Zero(); // initialise le vecteur de direction
 
-    this._moveDirection = Vector3.Zero(); // vector that holds movement information
-    this._h = this._input.horizontal; //x-axis
-    this._v = this._input.vertical; //z-axis
+    // récupère les entrées utilisateur
+    this._h = this._input.horizontal; // x-axis
+    this._v = this._input.vertical; // z-axis
 
-    //--MOVEMENTS BASED ON CAMERA (as it rotates)--
+    // mouvements basés sur l'angle de la caméra
     let fwd = this._camRoot.forward;
     let right = this._camRoot.right;
     let correctedVertical = fwd.scaleInPlace(this._v);
     let correctedHorizontal = right.scaleInPlace(this._h);
-
-    //movement based off of camera's view
     let move = correctedHorizontal.addInPlace(correctedVertical);
 
-    //clear y so that the character doesnt fly up, normalize for next step
+    // normalisation pour empêcher le personnage de voler
     this._moveDirection = new Vector3(move.normalize().x, 0, move.normalize().z);
 
-    //final movement that takes into consideration the inputs
+    // définition de la vitesse en fonction du sprint
     let speed = this._input.sprinting ? Player.SPRINT_SPEED : Player.NORMAL_SPEED;
-
     this._moveDirection = this._moveDirection.normalize().scale(speed);
 
-    //check if there is movement to determine if rotation is needed
-    let input = new Vector3(this._input.horizontalAxis, 0, this._input.verticalAxis); //along which axis is the direction
-    if (input.length() == 0) {
-      //if there's no input detected, prevent rotation and keep player in same rotation
-      return;
+    // gestion de la rotation pour toujours pointer dans la direction correcte
+    if (move.length() > 0) {
+        let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
+        angle += this._camRoot.rotation.y;
+        let targ = Quaternion.FromEulerAngles(0, angle, 0);
+        this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 5 * this._deltaTime);
     }
-    this.getLogPosition();
+}
 
-    //rotation based on input & the camera angle
-    let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
-    angle += this._camRoot.rotation.y;
-    let targ = Quaternion.FromEulerAngles(0, angle, 0);
-    this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 5 * this._deltaTime);
-  }
 
   //--GROUND DETECTION--
   //Send raycast to the floor to detect if there are any hits with meshes below the character
@@ -277,14 +270,13 @@ export class Player extends TransformNode {
   }
 
   private _beforeRenderUpdate(): void {
+    this._input.updateInputState();
     this._updateFromControls();
     this._updateGroundDetection();
     this._animatePlayer();
   }
 
-  public getLogPosition(): void {
-    console.log('la position du personnage --->', this.mesh.position);
-  }
+
 
   public getPosition() {
     return this.mesh.absolutePosition;
