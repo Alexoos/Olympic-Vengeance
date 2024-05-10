@@ -18,6 +18,8 @@ import {
   StandardMaterial,
   ShadowGenerator,
   PointLight,
+  ActionManager,
+  ExecuteCodeAction,
 } from '@babylonjs/core';
 import { AdvancedDynamicTexture, Button, Control } from '@babylonjs/gui';
 import { Player } from './classes/characterController';
@@ -47,6 +49,7 @@ class App {
   private _player: Player;
   private _goblin: Goblin;
   private _environment: Environment;
+  private updateInterval: NodeJS.Timeout;
   private _input: PlayerInput;
   private _ennemyManager: EnnemyManager;
 
@@ -56,6 +59,8 @@ class App {
     // initialize babylon scene and engine
     this._engine = new Engine(this._canvas, true);
     this._scene = new Scene(this._engine);
+    this._scene.collisionsEnabled = true;
+
 
     // hide/show the Inspector
     window.addEventListener('keydown', (ev) => {
@@ -72,6 +77,19 @@ class App {
     // run the main render loop
     this._main();
   }
+
+  private startGoblinUpdateInterval() {
+    // Met à jour le comportement du gobelin toutes les 2 secondes
+    this.updateInterval = setInterval(() => {
+        // Passe la position du joueur au gobelin
+        this._goblin.update(this._player.getPosition());
+    }, 450);
+}
+
+private stopGoblinUpdateInterval() {
+  clearInterval(this.updateInterval);
+}
+
 
   private _createCanvas(): HTMLCanvasElement {
     //Commented out for development
@@ -111,6 +129,7 @@ class App {
           break;
         case State.GAME:
           this._scene.render();
+          this._ennemyManager.update(this._player.getPosition());
           break;
         case State.LOSE:
           this._scene.render();
@@ -283,9 +302,9 @@ class App {
 
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
+    this._ennemyManager = new EnnemyManager(scene);
+    await this._ennemyManager.init(this._player.getPosition());
 
-    this._goblin = new Goblin();
-    this._goblin.init();
 
     //player camera
     const camera = this._player.activatePlayerCamera();
@@ -293,6 +312,7 @@ class App {
 
   private async _setUpGame() {
     let scene = new Scene(this._engine);
+  
     this._gamescene = scene;
     await this._loadCharacterAssets(scene);
 
@@ -325,15 +345,12 @@ class App {
     //get rid of start scene, switch to gamescene and change states
     this._scene.dispose();
     this._state = State.GAME;
+    //this.startGoblinUpdateInterval();
     this._scene = scene;
     this._engine.hideLoadingUI();
 
     //the game is ready, attach control back
     this._scene.attachControl();
-
-    this._engine.runRenderLoop(() => {
-      this._goblin.update(this._player.getPosition());
-    });
   }
 
   private async _goToLose(): Promise<void> {
@@ -364,7 +381,9 @@ class App {
     //lastly set the current state to the lose state and set the scene to the lose scene
     this._scene.dispose();
     this._scene = scene;
+   // this.stopGoblinUpdateInterval(); // Arrêtez l'intervalle
     this._state = State.LOSE;
+    
   }
 }
 new App();

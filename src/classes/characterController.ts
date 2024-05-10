@@ -278,7 +278,7 @@ export class Player extends TransformNode {
 
 
 
-  public getPosition() {
+  public getPosition(): Vector3 {
     return this.mesh.absolutePosition;
   }
 }
