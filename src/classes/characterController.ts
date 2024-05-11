@@ -89,6 +89,7 @@ export class Player extends TransformNode {
   static health: number;
   hacheMesh: AbstractMesh;
   private lastLogTime: number = 0;
+  private isDead: boolean = false;
 
   constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
     super('kolasis', scene);
@@ -99,6 +100,8 @@ export class Player extends TransformNode {
     // this._loadSounds(this.scene);
     this.mesh = assets.mesh;
     this.mesh.parent = this;
+
+    console.log('assets animationgroupe', assets.animationGroups);
 
     let childMeshes = this.mesh.getChildMeshes();
 
@@ -338,11 +341,29 @@ export class Player extends TransformNode {
     }
   }
 
+  private disableControls(): void {
+    this._input.disable(); // You'll need to implement a method to disable input handling
+  }
+
+  private handleDeath(): void {
+    // Play death animation
+    this._currentAnim.stop();
+    // this._currentAnim = this._deathAnimation; // Ensure you have a death animation loaded
+    this._currentAnim.play(false);
+
+    // Disable inputs
+    this.disableControls();
+  }
+
   public setHealth(nb: number): number {
-    if (this.health - nb > 0 && this._currentAnim !== this._block) {
+    if (this._currentAnim !== this._block) {
       this.health -= nb;
-    } else {
-      //etat de mort faire en sorte que le jeu s'arrete
+    }
+    if (this.health <= 0) {
+      console.log('le joueur est mort');
+      this.health = 0;
+      this.isDead = true; // Set dead flag
+      this.handleDeath();
     }
     return this.health;
   }

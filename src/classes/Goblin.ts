@@ -373,10 +373,10 @@ class Goblin extends TransformNode {
   }
 
   dealDamage(player) {
-    //  console.log(`Dealing ${this.damage} damage to the player!`);
+    console.log(`Dealing ${this.damage} damage to the player!`);
     const healBefore = player.health;
-    player.health -= this.damage; // Adjust based on your Player class implementation
-    //console.log(`Player health: ${healBefore} -> ${player.health}`);
+    player.setHealth(this.damage); // Adjust based on your Player class implementation
+    console.log(`Player health: ${healBefore} -> ${player.health}`);
   }
 }
 
