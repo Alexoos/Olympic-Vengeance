@@ -45,6 +45,7 @@ class Goblin extends TransformNode {
   speed: number;
   damage: number = 10;
   life: number = 20;
+  attackCooldownActive: boolean = false;
 
   private _run: AnimationGroup;
   private _idle: AnimationGroup;
@@ -205,9 +206,38 @@ private updateOrientation(): void {
     this._animatePlayer();
   }
 
+  updateStateBasedOnDistance() {
+    if (this.distanceFromPlayer > SENS_DISTANCE) {
+        this.states = STATES.STATE_IDLE;
+    } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
+        this.states = STATES.STATE_SEARCH;
+    } else {
+        this.states = STATES.STATE_FOLLOW;
+    }
+    this.setAnimationBasedOnState();  // Update animation based on the new state
+}
+
+setAnimationBasedOnState() {
+  switch (this.states) {
+      case STATES.STATE_IDLE:
+          this.setAnimation(this._idle);
+          break;
+      case STATES.STATE_SEARCH:
+          this.setAnimation(this._walk);
+          break;
+      case STATES.STATE_FOLLOW:
+          this.setAnimation(this._run);
+          break;
+      case STATES.STATE_ATTACK:
+          if (!this.attackCooldownActive) {
+              this.setAnimation(this._attack);
+          }
+          break;
+  }
+}
+
   comportement() {
     // Add logs to check the states
-    console.log(`Current state of the goblin: ${this.states}`);
     switch (this.states) {
       case STATES.STATE_IDLE:
         this.comportementIdle();
@@ -223,7 +253,6 @@ private updateOrientation(): void {
         break;
       case STATES.STATE_ATTACK:
         this.comportementAttack();
-        this.setAnimation(this._attack);
         break;
     }
   }
@@ -291,20 +320,23 @@ private updateOrientation(): void {
     }
   }
   comportementAttack() {
-    this.moveDirection.setAll(0); // Goblin stops to attack
-  
+    this.setAnimation(this._attack);  // Assurez-vous que l'animation d'attaque est bien jouée
+
+    // Stop the movement when attacking
+    this.moveDirection.setAll(0);
+
+    // Implement attack cooldown to prevent immediate re-attack
+    if (!this.attackCooldownActive) {
+        this.attackCooldownActive = true;
+        setTimeout(() => this.attackCooldownActive = false, 1000);  // 1 second cooldown
+    }
+
     // Check if the player has moved away
     if (this.distanceFromPlayer > 1.5) {
-      if (this.distanceFromPlayer > SENS_DISTANCE) {
-        this.states = STATES.STATE_IDLE;
-      } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
-        this.states = STATES.STATE_SEARCH;
-      } else {
-        this.states = STATES.STATE_FOLLOW;
-      }
+        // Determine the next state based on the distance
+        this.updateStateBasedOnDistance();
     }
-  
-  }
+}
 }
 
 export default Goblin;
