@@ -87,14 +87,14 @@ class Goblin extends TransformNode {
             m.metadata = { goblinInstance: this };
           }
         });
-
+        console.log('animationGroups -->', animationGroups);
         // Setup animations after they are confirmed to be loaded
         if (animationGroups.length > 0) {
           this._run = animationGroups.find((ag) => ag.name === 'Running');
           this._idle = animationGroups.find((ag) => ag.name === 'Idle');
           this._walk = animationGroups.find((ag) => ag.name === 'Walk');
           this._attack = animationGroups.find((ag) => ag.name === 'Attack');
-          this._dead = animationGroups.find((ag) => ag.name === 'DEAD');
+          this._dead = animationGroups.find((ag) => ag.name === 'Dead');
           this._setUpAnimations();
         } else {
           console.error('No animations were loaded for the goblin model.');
@@ -196,6 +196,7 @@ class Goblin extends TransformNode {
   }
 
   public update(position: Vector3): void {
+    if (this.health <= 0) return;
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
     this.playerPosition = position;
 
@@ -365,7 +366,9 @@ class Goblin extends TransformNode {
     } else {
       console.log('Goblin is dead!');
       this.health = 0;
+      this.attackCooldownActive = true;
       this.setAnimation(this._dead);
+      this._dead.play(false);
     }
   }
 
