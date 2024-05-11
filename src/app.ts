@@ -21,7 +21,7 @@ import {
   ActionManager,
   ExecuteCodeAction,
 } from '@babylonjs/core';
-import { AdvancedDynamicTexture, Button, Control } from '@babylonjs/gui';
+import * as GUI from '@babylonjs/gui';
 import { Player } from './classes/characterController';
 import { Environment } from './environment';
 import { PlayerInput } from './classes/inputController';
@@ -60,6 +60,8 @@ class App {
     this._engine = new Engine(this._canvas, true);
     this._scene = new Scene(this._engine);
     this._scene.collisionsEnabled = true;
+
+
 
 
     // hide/show the Inspector
@@ -132,43 +134,6 @@ class App {
       this._engine.resize();
     });
   }
-  private async _goToStart() {
-    this._engine.displayLoadingUI();
-
-    this._scene.detachControl();
-    let scene = new Scene(this._engine);
-    scene.clearColor = new Color4(0, 0, 0, 1);
-    let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
-    camera.setTarget(Vector3.Zero());
-
-    //create a fullscreen ui for all of our GUI elements
-    const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
-
-    //create a simple button
-    const startBtn = Button.CreateSimpleButton('start', 'PLAY');
-    startBtn.width = 0.2;
-    startBtn.height = '40px';
-    startBtn.color = 'white';
-    startBtn.top = '-14px';
-    startBtn.thickness = 0;
-    startBtn.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-    guiMenu.addControl(startBtn);
-
-    //this handles interactions with the start button attached to the scene
-    startBtn.onPointerDownObservable.add(() => {
-      this._goToCutScene();
-      scene.detachControl(); //observables disabled
-    });
-
-    //--SCENE FINISHED LOADING--
-    await scene.whenReadyAsync();
-    this._engine.hideLoadingUI();
-    //lastly set the current state to the start state and set the scene to the start scene
-    this._scene.dispose();
-    this._scene = scene;
-    this._state = State.START;
-  }
 
   private async _goToCutScene(): Promise<void> {
     this._engine.displayLoadingUI();
@@ -181,14 +146,14 @@ class App {
     this._cutScene.clearColor = new Color4(0, 0, 0, 1);
 
     //--GUI--
-    const cutScene = AdvancedDynamicTexture.CreateFullscreenUI('cutscene');
+    const cutScene = GUI.AdvancedDynamicTexture.CreateFullscreenUI('cutscene');
 
     //--PROGRESS DIALOGUE--
-    const next = Button.CreateSimpleButton('next', 'NEXT');
+    const next = GUI.Button.CreateSimpleButton('next', 'NEXT');
     next.color = 'white';
     next.thickness = 0;
-    next.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-    next.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    next.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+    next.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
     next.width = '64px';
     next.height = '64px';
     next.top = '-3%';
@@ -212,6 +177,71 @@ class App {
       finishedLoading = true;
     });
   }
+
+  private handleButtonEnter(buttonName) : void {
+    switch (buttonName) {
+        case 'play':
+            this._goToCutScene();
+            this._scene.detachControl(); // Assuming `this._scene` is accessible here
+            break;
+        // Add more cases if needed for other buttons
+    }
+    console.log(`Button ${buttonName} hovered`);
+}
+
+
+
+  private async _goToStart() {
+    this._engine.displayLoadingUI();
+
+    this._scene.detachControl();
+    let scene = new Scene(this._engine);
+    scene.clearColor = new Color4(0, 0, 0, 1);
+    let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
+    camera.setTarget(Vector3.Zero());
+
+    //create a fullscreen ui for all of our GUI elements
+    const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
+    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+
+    const background = new GUI.Image("background", "path_to_your_background_image.jpg");
+      background.stretch = GUI.Image.STRETCH_UNIFORM;
+      guiMenu.addControl(background);
+
+      const panel = new GUI.StackPanel();
+      panel.width = "500px";
+      panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+      panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+      guiMenu.addControl(panel);
+      const playButton = GUI.Button.CreateSimpleButton("play", "Nouvelle Partie");
+      playButton.width = "400px";
+      playButton.height = "50px";
+      playButton.color = "white";
+      playButton.cornerRadius = 20;
+      playButton.background = "transparent";
+      playButton.fontSize = "20px";
+      playButton.hoverCursor = "pointer";
+      playButton.paddingTop = "10px";
+      playButton.paddingBottom = "10px";
+      playButton.paddingLeft = "10px";
+      playButton.paddingRight = "10px";
+      playButton.thickness = 0;
+      playButton.background = "white";
+      playButton.color = "black";
+      panel.addControl(playButton);
+      playButton.onPointerClickObservable.add(() => {
+        this.handleButtonEnter("play");
+      });
+
+    //--SCENE FINISHED LOADING--
+    await scene.whenReadyAsync();
+    this._engine.hideLoadingUI();
+    //lastly set the current state to the start state and set the scene to the start scene
+    this._scene.dispose();
+    this._scene = scene;
+    this._state = State.START;
+  }
+
 
   private async _loadCharacterAssets(scene): Promise<any> {
     async function loadCharacter() {
@@ -318,7 +348,7 @@ class App {
     await this._initializeGameAsync(scene);
 
     //--GUI--
-    const playerUI = AdvancedDynamicTexture.CreateFullscreenUI('UI');
+    const playerUI = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
     scene.detachControl();
 
     //--CREATE ENNEMIES--
@@ -352,8 +382,8 @@ class App {
     camera.setTarget(Vector3.Zero());
 
     //--GUI--
-    const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-    const mainBtn = Button.CreateSimpleButton('mainmenu', 'MAIN MENU');
+    const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
+    const mainBtn = GUI.Button.CreateSimpleButton('mainmenu', 'MAIN MENU');
     mainBtn.width = 0.2;
     mainBtn.height = '40px';
     mainBtn.color = 'white';
@@ -375,3 +405,5 @@ class App {
   }
 }
 new App();
+
+
