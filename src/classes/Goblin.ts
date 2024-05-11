@@ -24,7 +24,7 @@ const NORMAL_SPEED = 0.1;
 const SPRINT_SPEED = 0.2;
 
 const LOOK_DISTANCE = 6;
-const SENS_DISTANCE = 20;
+const SENS_DISTANCE = 15;
 
 class Goblin extends TransformNode {
   public mesh: Mesh;
@@ -332,6 +332,14 @@ class Goblin extends TransformNode {
     if (this.distanceFromPlayer > 1.5) {
       // Determine the next state based on the distance
       this.updateStateBasedOnDistance();
+    }
+  }
+
+  public setHealth(nb: number): void {
+    if (this.health - nb > 0) {
+      this.health -= nb;
+    } else {
+      this.setAnimation(this._dead);
     }
   }
 

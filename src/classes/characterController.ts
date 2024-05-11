@@ -1,4 +1,5 @@
 import {
+  AbstractMesh,
   ActionManager,
   AnimationGroup,
   ArcRotateCamera,
@@ -86,6 +87,7 @@ export class Player extends TransformNode {
   static _deltaTime: number;
   static mesh: Mesh;
   static health: number;
+  hacheMesh: AbstractMesh;
 
   constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
     super('kolasis', scene);
@@ -96,6 +98,17 @@ export class Player extends TransformNode {
     // this._loadSounds(this.scene);
     this.mesh = assets.mesh;
     this.mesh.parent = this;
+
+    let childMeshes = this.mesh.getChildMeshes();
+
+    // Parcourez tous les meshes pour trouver celui avec le nom spécifique
+    childMeshes.forEach((mesh) => {
+      // Vérifiez si le mesh a le nom que vous recherchez
+      if (mesh.name === 'BattleAxe_GEO') {
+        // Si c'est le cas, assignez ce mesh à votre variable
+        this.hacheMesh = mesh;
+      }
+    });
 
     this.health = 100;
     this.damage = 20;
@@ -109,9 +122,13 @@ export class Player extends TransformNode {
     this._run = assets.animationGroups[4];
     this._attack = assets.animationGroups[0];
     this._block = assets.animationGroups[1];
-    //this._damage = assets.animationGoups[5];
 
     this._setUpAnimations();
+
+    // Définissez un gestionnaire de collision
+    this.scene.onBeforeRenderObservable.add(() => {
+      this.detectCollisions();
+    });
   }
 
   private _setupPlayerCamera(): UniversalCamera {
@@ -284,6 +301,20 @@ export class Player extends TransformNode {
     return this.mesh.absolutePosition;
   }
 
+  public detectCollisions() {
+    // Boucle à travers tous les meshes de la scène pour vérifier les collisions avec le joueur
+    this.scene.meshes.forEach((otherMesh) => {
+      // Vérifiez si le mesh est différent du mesh du joueur
+      if (otherMesh !== this.mesh && otherMesh !== this.hacheMesh) {
+        // Vérifiez s'il y a une collision entre le mesh du joueur et le mesh actuel
+        if (this.hacheMesh.intersectsMesh(otherMesh, true)) {
+          // Collision détectée, vous pouvez effectuer des actions ici
+          console.log('Collision avec le mesh :', otherMesh.name);
+        }
+      }
+    });
+  }
+
   public setHealth(nb: number): number {
     if (this.health - nb > 0 && this._currentAnim !== this._block) {
       this.health -= nb;
@@ -292,4 +323,6 @@ export class Player extends TransformNode {
     }
     return this.health;
   }
+
+  public dealDamage(damage: number) {}
 }
