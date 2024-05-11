@@ -21,7 +21,7 @@ const STATES = Object.freeze({
 });
 
 const NORMAL_SPEED = 0.1;
-const SPRINT_SPEED = 0.20;
+const SPRINT_SPEED = 0.2;
 
 const LOOK_DISTANCE = 6;
 const SENS_DISTANCE = 20;
@@ -44,8 +44,9 @@ class Goblin extends TransformNode {
   moveDirection: Vector3 = Vector3.Zero();
   speed: number;
   damage: number = 10;
-  life: number = 20;
+  health: number = 20;
   attackCooldownActive: boolean = false;
+  private player: Player;
 
   private _run: AnimationGroup;
   private _idle: AnimationGroup;
@@ -57,13 +58,19 @@ class Goblin extends TransformNode {
   private _currentAnim: AnimationGroup = null;
   private _prevAnim: AnimationGroup;
 
-  constructor(scene: Scene) {
+  constructor(scene: Scene, player: Player) {
     super('goblinRoot', scene);
     this.scene = scene;
+    this.player = player;
   }
 
   init() {
-    SceneLoader.ImportMesh('', './models/goblin.glb', '', this.scene, (meshes, particleSystems, skeletons, animationGroups) => {
+    SceneLoader.ImportMesh(
+      '',
+      './models/goblin.glb',
+      '',
+      this.scene,
+      (meshes, particleSystems, skeletons, animationGroups) => {
         this.mesh = meshes[0] as Mesh;
         this.mesh.name = 'goblin';
         this.mesh.checkCollisions = true;
@@ -72,48 +79,43 @@ class Goblin extends TransformNode {
 
         // Setup animations after they are confirmed to be loaded
         if (animationGroups.length > 0) {
-            this._run = animationGroups.find(ag => ag.name === 'Running');
-            this._idle = animationGroups.find(ag => ag.name === 'Idle');
-            this._walk = animationGroups.find(ag => ag.name === 'Walk');
-            this._attack = animationGroups.find(ag => ag.name === 'Attack');
-            this._dead = animationGroups.find(ag => ag.name === 'DEAD');
-            this._setUpAnimations();
+          this._run = animationGroups.find((ag) => ag.name === 'Running');
+          this._idle = animationGroups.find((ag) => ag.name === 'Idle');
+          this._walk = animationGroups.find((ag) => ag.name === 'Walk');
+          this._attack = animationGroups.find((ag) => ag.name === 'Attack');
+          this._dead = animationGroups.find((ag) => ag.name === 'DEAD');
+          this._setUpAnimations();
         } else {
-            console.error('No animations were loaded for the goblin model.');
+          console.error('No animations were loaded for the goblin model.');
         }
-    });
-}
+      },
+    );
+  }
 
-setAnimation(animation) {
-  if (this._currentAnim !== animation) {
+  setAnimation(animation) {
+    if (this._currentAnim !== animation) {
       if (this._currentAnim) {
-          this._currentAnim.stop();
+        this._currentAnim.stop();
       }
       this._currentAnim = animation;
       this._currentAnim.play(true);
+    }
   }
-}
 
-private updateOrientation(): void {
-  if (!this.playerPosition || !this.mesh) return;
+  private updateOrientation(): void {
+    if (!this.playerPosition || !this.mesh) return;
 
-  // Vector pointing from the goblin to the player
-  let directionToPlayer = this.playerPosition.subtract(this.mesh.position);
-  directionToPlayer.y = 0; // Keep the rotation on the horizontal plane
-  
-  
-  // Calculate the angle from the goblin to the player
-  let angle = Math.atan2(directionToPlayer.z, directionToPlayer.x);
+    // Vector pointing from the goblin to the player
+    let directionToPlayer = this.playerPosition.subtract(this.mesh.position);
+    directionToPlayer.y = 0; // Keep the rotation on the horizontal plane
 
-  // Adjust the goblin's orientation so it directly faces the player
-  // This assumes the goblin's forward direction aligns with the positive z-axis when angle is 0
-  this.mesh.rotationQuaternion = Quaternion.FromEulerAngles(0, -angle - Math.PI / 2, 0);
-}
+    // Calculate the angle from the goblin to the player
+    let angle = Math.atan2(directionToPlayer.z, directionToPlayer.x);
 
-
-
-
-
+    // Adjust the goblin's orientation so it directly faces the player
+    // This assumes the goblin's forward direction aligns with the positive z-axis when angle is 0
+    this.mesh.rotationQuaternion = Quaternion.FromEulerAngles(0, -angle - Math.PI / 2, 0);
+  }
 
   private _setUpAnimations(): void {
     if (this._run && this._idle && this._walk && this._attack) {
@@ -126,19 +128,8 @@ private updateOrientation(): void {
       // Initialize current and previous animations
       this._currentAnim = this._idle;
       this._prevAnim = this._walk;
-  } else {
+    } else {
       console.error('Animations are not properly initialized.');
-  }
-  }
-
-  private _animatePlayer(): void {
-    this._currentAnim = this._idle;
-
-    if (this._currentAnim != null && this._prevAnim !== this._currentAnim) {
-      //Animations
-      this._prevAnim.stop();
-      this._currentAnim.play(this._currentAnim.loopAnimation);
-      this._prevAnim = this._currentAnim;
     }
   }
 
@@ -203,38 +194,43 @@ private updateOrientation(): void {
 
     // Mettez à jour la gravité et les collisions
     this._updateGroundDetection();
-    this._animatePlayer();
+
+    if (this.mesh && this.mesh.intersectsMesh(this.player.mesh, false)) {
+      this.dealDamage(this.player);
+      console.log('Le gobelin touche un autre objet !');
+    }
   }
 
   updateStateBasedOnDistance() {
     if (this.distanceFromPlayer > SENS_DISTANCE) {
-        this.states = STATES.STATE_IDLE;
+      this.states = STATES.STATE_IDLE;
     } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
-        this.states = STATES.STATE_SEARCH;
+      this.states = STATES.STATE_SEARCH;
     } else {
-        this.states = STATES.STATE_FOLLOW;
+      this.states = STATES.STATE_FOLLOW;
     }
-    this.setAnimationBasedOnState();  // Update animation based on the new state
-}
-
-setAnimationBasedOnState() {
-  switch (this.states) {
-      case STATES.STATE_IDLE:
-          this.setAnimation(this._idle);
-          break;
-      case STATES.STATE_SEARCH:
-          this.setAnimation(this._walk);
-          break;
-      case STATES.STATE_FOLLOW:
-          this.setAnimation(this._run);
-          break;
-      case STATES.STATE_ATTACK:
-          if (!this.attackCooldownActive) {
-              this.setAnimation(this._attack);
-          }
-          break;
+    this.setAnimationBasedOnState(); // Update animation based on the new state
   }
-}
+
+  setAnimationBasedOnState() {
+    switch (this.states) {
+      case STATES.STATE_IDLE:
+        this.setAnimation(this._idle);
+        this._currentAnim;
+        break;
+      case STATES.STATE_SEARCH:
+        this.setAnimation(this._walk);
+        break;
+      case STATES.STATE_FOLLOW:
+        this.setAnimation(this._run);
+        break;
+      case STATES.STATE_ATTACK:
+        if (!this.attackCooldownActive) {
+          this.setAnimation(this._attack);
+        }
+        break;
+    }
+  }
 
   comportement() {
     // Add logs to check the states
@@ -307,7 +303,8 @@ setAnimationBasedOnState() {
       this.states = STATES.STATE_IDLE;
     } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
       this.states = STATES.STATE_SEARCH;
-    } else if (this.distanceFromPlayer <= 1.5) { // Check if the Goblin is very close to the player
+    } else if (this.distanceFromPlayer <= 1.5) {
+      // Check if the Goblin is very close to the player
       this.states = STATES.STATE_ATTACK;
     } else {
       this.playerPosition.subtractToRef(this.mesh.absolutePosition, this.moveDirection);
@@ -320,23 +317,37 @@ setAnimationBasedOnState() {
     }
   }
   comportementAttack() {
-    this.setAnimation(this._attack);  // Assurez-vous que l'animation d'attaque est bien jouée
+    this.setAnimation(this._attack); // Assurez-vous que l'animation d'attaque est bien jouée
 
     // Stop the movement when attacking
     this.moveDirection.setAll(0);
 
     // Implement attack cooldown to prevent immediate re-attack
     if (!this.attackCooldownActive) {
-        this.attackCooldownActive = true;
-        setTimeout(() => this.attackCooldownActive = false, 1000);  // 1 second cooldown
+      this.attackCooldownActive = true;
+      setTimeout(() => (this.attackCooldownActive = false), 1000); // 1 second cooldown
     }
 
     // Check if the player has moved away
     if (this.distanceFromPlayer > 1.5) {
-        // Determine the next state based on the distance
-        this.updateStateBasedOnDistance();
+      // Determine the next state based on the distance
+      this.updateStateBasedOnDistance();
     }
-}
+  }
+
+  dealDamage(player) {
+    // Vérifier si l'animation d'attaque est terminée, si le joueur est à la bonne distance, et si l'animation d'attaque est en cours
+    if (this._currentAnim === this._attack) {
+      // Vérifier si l'animation d'attaque est terminée
+      this._currentAnim.onAnimationEndObservable.add(() => {
+        if (this.distanceFromPlayer <= 1.5) {
+          // Appliquer des dégâts au joueur
+          let playerHealth = player.setHealth(this.damage);
+          console.log(playerHealth);
+        }
+      });
+    }
+  }
 }
 
 export default Goblin;

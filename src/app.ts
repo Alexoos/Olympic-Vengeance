@@ -61,9 +61,6 @@ class App {
     this._scene = new Scene(this._engine);
     this._scene.collisionsEnabled = true;
 
-
-
-
     // hide/show the Inspector
     window.addEventListener('keydown', (ev) => {
       // Shift+Ctrl+Alt+I
@@ -79,7 +76,6 @@ class App {
     // run the main render loop
     this._main();
   }
-
 
   private _createCanvas(): HTMLCanvasElement {
     //Commented out for development
@@ -178,67 +174,64 @@ class App {
     });
   }
 
-  private handleButtonEnter(buttonName) : void {
+  private handleButtonEnter(buttonName): void {
     switch (buttonName) {
-        case 'play':
-            this._goToCutScene();
-            this._scene.detachControl(); // Assuming `this._scene` is accessible here
-            break;
-        // Add more cases if needed for other buttons
+      case 'play':
+        this._goToCutScene();
+        this._scene.detachControl(); // Assuming `this._scene` is accessible here
+        break;
+      // Add more cases if needed for other buttons
     }
     console.log(`Button ${buttonName} hovered`);
-}
-
-
+  }
 
   private async _goToStart() {
-      this._engine.displayLoadingUI();
+    this._engine.displayLoadingUI();
 
-      this._scene.detachControl();
-      let scene = new Scene(this._engine);
-      scene.clearColor = new Color4(0, 0, 0, 1);
-      let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
-      camera.setTarget(Vector3.Zero());
+    this._scene.detachControl();
+    let scene = new Scene(this._engine);
+    scene.clearColor = new Color4(0, 0, 0, 1);
+    let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
+    camera.setTarget(Vector3.Zero());
 
-      //create a fullscreen ui for all of our GUI elements
-      const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
-      guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+    //create a fullscreen ui for all of our GUI elements
+    const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
+    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
 
+    const logo = new GUI.Image('logo', 'favicon.png');
+    logo.width = '250px'; // Set the width as needed
+    logo.height = '250px'; // Set the height as needed
+    logo.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    logo.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    logo.top = '120px'; // Adjust this to position the logo correctly
+    guiMenu.addControl(logo);
 
-      const logo = new GUI.Image("logo", "favicon.png");
-      logo.width = "250px"; // Set the width as needed
-      logo.height = "250px"; // Set the height as needed
-      logo.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
-      logo.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-      logo.top = "120px"; // Adjust this to position the logo correctly
-      guiMenu.addControl(logo);
-
-      const panel = new GUI.StackPanel();
-      panel.width = "1500px";
-      panel.top = "50px";
-      panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-      panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-      guiMenu.addControl(panel);
-      const playButton = GUI.Button.CreateSimpleButton("play", "Nouvelle Partie");
-      playButton.width = "400px";
-      playButton.height = "50px";
-      playButton.color = "white";
-      playButton.cornerRadius = 20;
-      playButton.background = "transparent";
-      playButton.fontSize = "20px";
-      playButton.hoverCursor = "pointer";
-      playButton.paddingTop = "10px";
-      playButton.paddingBottom = "10px";
-      playButton.paddingLeft = "10px";
-      playButton.paddingRight = "10px";
-      playButton.thickness = 0;
-      playButton.background = "white";
-      playButton.color = "black";
-      // panel.addControl(logo);
-      panel.addControl(playButton);
-      playButton.onPointerClickObservable.add(() => {
-        this.handleButtonEnter("play");
-      });
+    const panel = new GUI.StackPanel();
+    panel.width = '1500px';
+    panel.top = '50px';
+    panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    guiMenu.addControl(panel);
+    const playButton = GUI.Button.CreateSimpleButton('play', 'Nouvelle Partie');
+    playButton.width = '400px';
+    playButton.height = '50px';
+    playButton.color = 'white';
+    playButton.cornerRadius = 20;
+    playButton.background = 'transparent';
+    playButton.fontSize = '20px';
+    playButton.hoverCursor = 'pointer';
+    playButton.paddingTop = '10px';
+    playButton.paddingBottom = '10px';
+    playButton.paddingLeft = '10px';
+    playButton.paddingRight = '10px';
+    playButton.thickness = 0;
+    playButton.background = 'white';
+    playButton.color = 'black';
+    // panel.addControl(logo);
+    panel.addControl(playButton);
+    playButton.onPointerClickObservable.add(() => {
+      this.handleButtonEnter('play');
+    });
 
     //--SCENE FINISHED LOADING--
     await scene.whenReadyAsync();
@@ -248,7 +241,6 @@ class App {
     this._scene = scene;
     this._state = State.START;
   }
-
 
   private async _loadCharacterAssets(scene): Promise<any> {
     async function loadCharacter() {
@@ -327,9 +319,8 @@ class App {
 
     //Create the player
     this._player = new Player(this.assets, scene, shadowGenerator, this._input);
-    this._ennemyManager = new EnnemyManager(scene);
+    this._ennemyManager = new EnnemyManager(scene, this._player);
     await this._ennemyManager.init(this._player.getPosition());
-
 
     //player camera
     const camera = this._player.activatePlayerCamera();
@@ -337,7 +328,7 @@ class App {
 
   private async _setUpGame() {
     let scene = new Scene(this._engine);
-  
+
     this._gamescene = scene;
     await this._loadCharacterAssets(scene);
 
@@ -406,11 +397,8 @@ class App {
     //lastly set the current state to the lose state and set the scene to the lose scene
     this._scene.dispose();
     this._scene = scene;
-   // this.stopGoblinUpdateInterval(); // Arrêtez l'intervalle
+    // this.stopGoblinUpdateInterval(); // Arrêtez l'intervalle
     this._state = State.LOSE;
-    
   }
 }
 new App();
-
-

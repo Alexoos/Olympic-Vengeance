@@ -23,8 +23,8 @@ export class Player extends TransformNode {
 
   //Player
   public mesh: Mesh; //outer collisionbox of player
-  private life = 100;
-  private damage = 20;
+  private health: number;
+  private damage: number;
 
   //Camera
   private _camRoot: TransformNode;
@@ -84,6 +84,8 @@ export class Player extends TransformNode {
   //observables
   public onRun = new Observable();
   static _deltaTime: number;
+  static mesh: Mesh;
+  static health: number;
 
   constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
     super('kolasis', scene);
@@ -94,6 +96,9 @@ export class Player extends TransformNode {
     // this._loadSounds(this.scene);
     this.mesh = assets.mesh;
     this.mesh.parent = this;
+
+    this.health = 100;
+    this.damage = 20;
 
     shadowGenerator.addShadowCaster(assets.mesh);
 
@@ -166,13 +171,12 @@ export class Player extends TransformNode {
 
     // gestion de la rotation pour toujours pointer dans la direction correcte
     if (move.length() > 0) {
-        let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
-        angle += this._camRoot.rotation.y;
-        let targ = Quaternion.FromEulerAngles(0, angle, 0);
-        this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 5 * this._deltaTime);
+      let angle = Math.atan2(this._input.horizontalAxis, this._input.verticalAxis);
+      angle += this._camRoot.rotation.y;
+      let targ = Quaternion.FromEulerAngles(0, angle, 0);
+      this.mesh.rotationQuaternion = Quaternion.Slerp(this.mesh.rotationQuaternion, targ, 5 * this._deltaTime);
     }
-}
-
+  }
 
   //--GROUND DETECTION--
   //Send raycast to the floor to detect if there are any hits with meshes below the character
@@ -276,9 +280,16 @@ export class Player extends TransformNode {
     this._animatePlayer();
   }
 
-
-
   public getPosition(): Vector3 {
     return this.mesh.absolutePosition;
+  }
+
+  public setHealth(nb: number): number {
+    if (this.health - nb > 0 && this._currentAnim !== this._block) {
+      this.health -= nb;
+    } else {
+      //etat de mort faire en sorte que le jeu s'arrete
+    }
+    return this.health;
   }
 }
