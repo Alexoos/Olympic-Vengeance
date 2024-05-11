@@ -58,11 +58,13 @@ class Goblin extends TransformNode {
   // animation trackers
   private _currentAnim: AnimationGroup = null;
   private _prevAnim: AnimationGroup;
+  private lastLogTime: number;
 
   constructor(scene: Scene, player: Player) {
     super('goblinRoot', scene);
     this.scene = scene;
     this.player = player;
+    this.lastLogTime = performance.now();
     this.attackInterval = null;
   }
 
@@ -196,6 +198,10 @@ class Goblin extends TransformNode {
   }
 
   public update(position: Vector3): void {
+    if (this.player.getHealth() <= 0) {
+      this.setAnimation(this._idle); // Set Goblin to idle animation
+      return; // Exit the update function early
+    }
     if (this.health <= 0) return;
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
     this.playerPosition = position;
@@ -334,22 +340,47 @@ class Goblin extends TransformNode {
     }
   }
   comportementAttack() {
-    this.setAnimation(this._attack); // Assurez-vous que l'animation d'attaque est bien jouée
+    const currentTime = performance.now();
 
-    // Stop the movement when attacking
+    // Ensure the goblin only attacks if the player is alive
+    if (this.player.getHealth() <= 0) {
+      console.log('Player is dead. Stopping attack.');
+      this.states = STATES.STATE_IDLE;
+      this.setAnimation(this._idle);
+      return;
+    }
+
+    this.setAnimation(this._attack); // Play attack animation
+
+    // Stop movement when attacking
     this.moveDirection.setAll(0);
 
-    // Implement attack cooldown to prevent immediate re-attack
+    // Check if enough time has passed to attack again
+    if (currentTime - this.lastLogTime > 2450) {
+      if (this.distanceFromPlayer <= 1.5) {
+        // Deal damage if the player is in range
+        this.dealDamage(this.player);
+        console.log('Attacking player!');
+        this.lastLogTime = currentTime; // Reset the last attack time
+      }
+    }
+
+    // Setup a repeating check to ensure the goblin attacks periodically when conditions are met
     if (!this.attackInterval) {
       this.attackInterval = setInterval(() => {
-        if (this.distanceFromPlayer <= 1.5) {
-          this.dealDamage(this.player);
+        if (this.distanceFromPlayer <= 1.5 && this.player.getHealth() > 0) {
+          if (currentTime - this.lastLogTime > 2450) {
+            this.dealDamage(this.player);
+            this.lastLogTime = currentTime; // Ensure timing updates correctly
+            console.log('Repeated attack on player!');
+          }
         } else {
-          // If the player moves out of range, consider stopping or altering the attack
-          this.clearAttackInterval();
+          // If the player moves out of range or is dead, stop the attack interval
+          clearInterval(this.attackInterval);
+          this.attackInterval = null;
           this.updateStateBasedOnDistance(); // Evaluate the next state
         }
-      }, 1570); // 1.57 seconds interval
+      }, 1570); // Check every 1.57 seconds
     }
   }
 

@@ -368,5 +368,9 @@ export class Player extends TransformNode {
     return this.health;
   }
 
+  public getHealth(): number {
+    return this.health;
+  }
+
   public dealDamage(damage: number) {}
 }
