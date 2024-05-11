@@ -203,7 +203,11 @@ class App {
       //create a fullscreen ui for all of our GUI elements
       const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
       guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
-
+      const backgroundImage = new GUI.Image("background", "background.jpg");
+      backgroundImage.width = 1;  // Full width
+      backgroundImage.height = 1;  // Full height
+      backgroundImage.stretch = GUI.Image.STRETCH_FILL
+      guiMenu.addControl(backgroundImage);
 
       const logo = new GUI.Image("logo", "favicon.png");
       logo.width = "250px"; // Set the width as needed
