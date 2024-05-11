@@ -78,18 +78,6 @@ class App {
     this._main();
   }
 
-  private startGoblinUpdateInterval() {
-    // Met à jour le comportement du gobelin toutes les 2 secondes
-    this.updateInterval = setInterval(() => {
-        // Passe la position du joueur au gobelin
-        this._goblin.update(this._player.getPosition());
-    }, 450);
-}
-
-private stopGoblinUpdateInterval() {
-  clearInterval(this.updateInterval);
-}
-
 
   private _createCanvas(): HTMLCanvasElement {
     //Commented out for development

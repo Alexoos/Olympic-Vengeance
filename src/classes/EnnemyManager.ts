@@ -1,13 +1,13 @@
 import { Vector3, Scalar } from '@babylonjs/core';
 import Goblin from './Goblin';
 
-const MAX_GOBLIN = 15;
+const MAX_GOBLIN = 1;
 
 class EnnemyManager {
   goblins: Goblin[] = [];
   scene;
   private frameCounter: number = 0; // Keeps track of the frames
-  private updateInterval: number = 5; // Set how often to update (every 10 frames)
+  private updateInterval: number = 6; // Set how often to update (every 10 frames)
 
   constructor(scene) {
     this.scene = scene;

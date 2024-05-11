@@ -17,10 +17,11 @@ const STATES = Object.freeze({
   STATE_IDLE: 0,
   STATE_SEARCH: 10,
   STATE_FOLLOW: 20,
+  STATE_ATTACK: 30,
 });
 
 const NORMAL_SPEED = 0.1;
-const SPRINT_SPEED = 0.65;
+const SPRINT_SPEED = 0.20;
 
 const LOOK_DISTANCE = 6;
 const SENS_DISTANCE = 20;
@@ -61,26 +62,72 @@ class Goblin extends TransformNode {
   }
 
   init() {
-    SceneLoader.ImportMesh('', './models/goblin.glb', '', this.scene, (meshes) => {
-      this.mesh = meshes[0] as Mesh;
-      this.mesh.name = 'goblin'; // Assigner un nom au mesh
-      this.mesh.checkCollisions = true; // Activer les collisions
-      this.mesh.ellipsoid = new Vector3(0.25, 0.5, 0.25); // Exemple de taille pour une capsule
-      this.mesh.ellipsoidOffset = new Vector3(0, 0.5, 0);
+    SceneLoader.ImportMesh('', './models/goblin.glb', '', this.scene, (meshes, particleSystems, skeletons, animationGroups) => {
+        this.mesh = meshes[0] as Mesh;
+        this.mesh.name = 'goblin';
+        this.mesh.checkCollisions = true;
+        this.mesh.ellipsoid = new Vector3(0.25, 0.5, 0.25);
+        this.mesh.ellipsoidOffset = new Vector3(0, 0.5, 0);
 
-      this._setUpAnimations();
+        // Setup animations after they are confirmed to be loaded
+        if (animationGroups.length > 0) {
+            this._run = animationGroups.find(ag => ag.name === 'Running');
+            this._idle = animationGroups.find(ag => ag.name === 'Idle');
+            this._walk = animationGroups.find(ag => ag.name === 'Walk');
+            this._attack = animationGroups.find(ag => ag.name === 'Attack');
+            this._dead = animationGroups.find(ag => ag.name === 'DEAD');
+            this._setUpAnimations();
+        } else {
+            console.error('No animations were loaded for the goblin model.');
+        }
     });
+}
+
+setAnimation(animation) {
+  if (this._currentAnim !== animation) {
+      if (this._currentAnim) {
+          this._currentAnim.stop();
+      }
+      this._currentAnim = animation;
+      this._currentAnim.play(true);
   }
+}
+
+private updateOrientation(): void {
+  if (!this.playerPosition || !this.mesh) return;
+
+  // Vector pointing from the goblin to the player
+  let directionToPlayer = this.playerPosition.subtract(this.mesh.position);
+  directionToPlayer.y = 0; // Keep the rotation on the horizontal plane
+  
+  
+  // Calculate the angle from the goblin to the player
+  let angle = Math.atan2(directionToPlayer.z, directionToPlayer.x);
+
+  // Adjust the goblin's orientation so it directly faces the player
+  // This assumes the goblin's forward direction aligns with the positive z-axis when angle is 0
+  this.mesh.rotationQuaternion = Quaternion.FromEulerAngles(0, -angle - Math.PI / 2, 0);
+}
+
+
+
+
+
 
   private _setUpAnimations(): void {
-    this.scene.stopAllAnimations();
-    this._walk.loopAnimation = true;
-    this._run.loopAnimation = true;
-    this._idle.loopAnimation = true;
+    if (this._run && this._idle && this._walk && this._attack) {
+      this.scene.stopAllAnimations();
+      this._run.loopAnimation = true;
+      this._walk.loopAnimation = true;
+      this._idle.loopAnimation = true;
+      this._attack.loopAnimation = true;
 
-    //initialize current and previous
-    this._currentAnim = this._idle;
-    this._prevAnim = this._walk;
+      // Initialize current and previous animations
+      this._currentAnim = this._idle;
+      this._prevAnim = this._walk;
+  } else {
+      console.error('Animations are not properly initialized.');
+  }
   }
 
   private _animatePlayer(): void {
@@ -145,17 +192,13 @@ class Goblin extends TransformNode {
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
     this.playerPosition = position;
 
-    // Vérifiez le comportement régulièrement
-    let now = performance.now();
-    if (now >= this.nextBehaviorCheck) {
-      this.comportement();
-      this.nextBehaviorCheck = now + this.behaviorInterval;
-    }
+    this.comportement();
 
     // Calculez la distance entre le gobelin et le joueur
     this.distanceFromPlayer = Vector3.Distance(this.mesh.absolutePosition, this.playerPosition);
 
     this.mesh.moveWithCollisions(this.moveDirection.addInPlace(this._gravity));
+    this.updateOrientation();
 
     // Mettez à jour la gravité et les collisions
     this._updateGroundDetection();
@@ -165,13 +208,23 @@ class Goblin extends TransformNode {
   comportement() {
     // Add logs to check the states
     console.log(`Current state of the goblin: ${this.states}`);
-
-    if (this.states === STATES.STATE_IDLE) {
-      this.comportementIdle();
-    } else if (this.states === STATES.STATE_SEARCH) {
-      this.comportementSearch();
-    } else if (this.states === STATES.STATE_FOLLOW) {
-      this.comportementFollow();
+    switch (this.states) {
+      case STATES.STATE_IDLE:
+        this.comportementIdle();
+        this.setAnimation(this._idle);
+        break;
+      case STATES.STATE_SEARCH:
+        this.comportementSearch();
+        this.setAnimation(this._walk);
+        break;
+      case STATES.STATE_FOLLOW:
+        this.comportementFollow();
+        this.setAnimation(this._run);
+        break;
+      case STATES.STATE_ATTACK:
+        this.comportementAttack();
+        this.setAnimation(this._attack);
+        break;
     }
   }
 
@@ -225,6 +278,8 @@ class Goblin extends TransformNode {
       this.states = STATES.STATE_IDLE;
     } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
       this.states = STATES.STATE_SEARCH;
+    } else if (this.distanceFromPlayer <= 1.5) { // Check if the Goblin is very close to the player
+      this.states = STATES.STATE_ATTACK;
     } else {
       this.playerPosition.subtractToRef(this.mesh.absolutePosition, this.moveDirection);
       if (this.moveDirection.lengthSquared() < 0.001) {
@@ -234,6 +289,21 @@ class Goblin extends TransformNode {
         this.moveDirection.normalize().scaleInPlace(this.speed);
       }
     }
+  }
+  comportementAttack() {
+    this.moveDirection.setAll(0); // Goblin stops to attack
+  
+    // Check if the player has moved away
+    if (this.distanceFromPlayer > 1.5) {
+      if (this.distanceFromPlayer > SENS_DISTANCE) {
+        this.states = STATES.STATE_IDLE;
+      } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
+        this.states = STATES.STATE_SEARCH;
+      } else {
+        this.states = STATES.STATE_FOLLOW;
+      }
+    }
+  
   }
 }
 
