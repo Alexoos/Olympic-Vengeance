@@ -74,6 +74,7 @@ class App {
     });
 
     // run the main render loop
+    window['gameApp'] = this;
     this._main();
   }
 
@@ -158,6 +159,14 @@ class App {
     backgroundImage.height = 1; // Full height
     backgroundImage.stretch = GUI.Image.STRETCH_FILL;
     guiMenu.addControl(backgroundImage);
+
+    const logo = new GUI.Image('logo', 'favicon.png');
+    logo.width = '250px'; // Set the width as needed
+    logo.height = '250px'; // Set the height as needed
+    logo.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+    logo.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    logo.top = '120px'; // Adjust this to position the logo correctly
+    guiMenu.addControl(logo);
 
     const panel = new GUI.StackPanel();
     panel.width = '1500px';
@@ -326,6 +335,38 @@ class App {
     this._scene.attachControl();
   }
 
+  // private async _goToLose(): Promise<void> {
+  //   this._engine.displayLoadingUI();
+
+  //   //--SCENE SETUP--
+  //   this._scene.detachControl();
+  //   let scene = new Scene(this._engine);
+  //   scene.clearColor = new Color4(0, 0, 0, 1);
+  //   let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
+  //   camera.setTarget(Vector3.Zero());
+
+  //   //--GUI--
+  //   const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
+  //   const mainBtn = GUI.Button.CreateSimpleButton('mainmenu', 'MAIN MENU');
+  //   mainBtn.width = 0.2;
+  //   mainBtn.height = '40px';
+  //   mainBtn.color = 'white';
+  //   guiMenu.addControl(mainBtn);
+  //   //this handles interactions with the start button attached to the scene
+  //   mainBtn.onPointerUpObservable.add(() => {
+  //     this._goToStart();
+  //   });
+
+  //   //--SCENE FINISHED LOADING--
+  //   await scene.whenReadyAsync();
+  //   this._engine.hideLoadingUI(); //when the scene is ready, hide loading
+  //   //lastly set the current state to the lose state and set the scene to the lose scene
+  //   this._scene.dispose();
+  //   this._scene = scene;
+  //   // this.stopGoblinUpdateInterval(); // Arrêtez l'intervalle
+  //   this._state = State.LOSE;
+  // }
+
   private async _goToLose(): Promise<void> {
     this._engine.displayLoadingUI();
 
@@ -338,12 +379,42 @@ class App {
 
     //--GUI--
     const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
-    const mainBtn = GUI.Button.CreateSimpleButton('mainmenu', 'MAIN MENU');
-    mainBtn.width = 0.2;
-    mainBtn.height = '40px';
-    mainBtn.color = 'white';
+    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+    const backgroundImage = new GUI.Image('background', 'background.jpg');
+    backgroundImage.width = 1; // Full width
+    backgroundImage.height = 1; // Full height
+    backgroundImage.stretch = GUI.Image.STRETCH_FILL;
+    guiMenu.addControl(backgroundImage);
+
+    // Game Over Text
+    const gameOverText = new GUI.TextBlock();
+    gameOverText.text = 'GAME OVER';
+    gameOverText.color = 'white';
+    gameOverText.fontSize = 50;
+    gameOverText.height = '100px';
+    gameOverText.top = '-100px'; // Adjust position to be above the button
+    gameOverText.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    gameOverText.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    guiMenu.addControl(gameOverText);
+
+    // Main Menu Button
+    const mainBtn = GUI.Button.CreateSimpleButton('mainmenu', 'MENU PRINCIPAL');
+    mainBtn.width = '400px';
+    mainBtn.height = '50px';
+    mainBtn.color = 'red';
+    mainBtn.cornerRadius = 20;
+    mainBtn.background = 'transparent';
+    mainBtn.fontSize = '20px';
+    mainBtn.hoverCursor = 'pointer';
+    mainBtn.paddingTop = '10px';
+    mainBtn.paddingBottom = '10px';
+    mainBtn.paddingLeft = '10px';
+    mainBtn.paddingRight = '10px';
+    mainBtn.thickness = 0;
+    mainBtn.background = 'white';
+    mainBtn.color = 'black';
+    mainBtn.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
     guiMenu.addControl(mainBtn);
-    //this handles interactions with the start button attached to the scene
     mainBtn.onPointerUpObservable.add(() => {
       this._goToStart();
     });
@@ -354,7 +425,6 @@ class App {
     //lastly set the current state to the lose state and set the scene to the lose scene
     this._scene.dispose();
     this._scene = scene;
-    // this.stopGoblinUpdateInterval(); // Arrêtez l'intervalle
     this._state = State.LOSE;
   }
 }

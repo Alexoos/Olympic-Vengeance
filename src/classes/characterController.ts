@@ -305,21 +305,6 @@ export class Player extends TransformNode {
     return this.mesh.absolutePosition;
   }
 
-  // public detectCollisions() {
-  //   // Boucle à travers tous les meshes de la scène pour vérifier les collisions avec le joueur
-  //   this.scene.meshes.forEach((otherMesh) => {
-  //     // Vérifiez si le mesh est différent du mesh du joueur
-  //     if (otherMesh !== this.mesh && otherMesh !== this.hacheMesh) {
-  //       // Vérifiez s'il y a une collision entre le mesh du joueur et le mesh actuel
-  //       if (otherMesh.name === 'Gobiln_eyes') {
-  //         if (this.hacheMesh.intersectsMesh(otherMesh, true)) {
-  //           console.log('collision avec ', otherMesh.name);
-  //         }
-  //       }
-  //     }
-  //   });
-  // }
-
   public detectCollisions() {
     // Only check for collisions if the current animation is 'attack'
     const currentTime = performance.now();
@@ -364,6 +349,9 @@ export class Player extends TransformNode {
       this.health = 0;
       this.isDead = true; // Set dead flag
       this.handleDeath();
+      setTimeout(() => {
+        (window as any).gameApp._goToLose();
+      }, 2000);
     }
     return this.health;
   }
