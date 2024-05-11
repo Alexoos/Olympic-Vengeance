@@ -192,24 +192,30 @@ class App {
 
 
   private async _goToStart() {
-    this._engine.displayLoadingUI();
+      this._engine.displayLoadingUI();
 
-    this._scene.detachControl();
-    let scene = new Scene(this._engine);
-    scene.clearColor = new Color4(0, 0, 0, 1);
-    let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
-    camera.setTarget(Vector3.Zero());
+      this._scene.detachControl();
+      let scene = new Scene(this._engine);
+      scene.clearColor = new Color4(0, 0, 0, 1);
+      let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
+      camera.setTarget(Vector3.Zero());
 
-    //create a fullscreen ui for all of our GUI elements
-    const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
-    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+      //create a fullscreen ui for all of our GUI elements
+      const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
+      guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
 
-    const background = new GUI.Image("background", "path_to_your_background_image.jpg");
-      background.stretch = GUI.Image.STRETCH_UNIFORM;
-      guiMenu.addControl(background);
+
+      const logo = new GUI.Image("logo", "favicon.png");
+      logo.width = "250px"; // Set the width as needed
+      logo.height = "250px"; // Set the height as needed
+      logo.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+      logo.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+      logo.top = "120px"; // Adjust this to position the logo correctly
+      guiMenu.addControl(logo);
 
       const panel = new GUI.StackPanel();
-      panel.width = "500px";
+      panel.width = "1500px";
+      panel.top = "50px";
       panel.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
       panel.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
       guiMenu.addControl(panel);
@@ -228,6 +234,7 @@ class App {
       playButton.thickness = 0;
       playButton.background = "white";
       playButton.color = "black";
+      // panel.addControl(logo);
       panel.addControl(playButton);
       playButton.onPointerClickObservable.add(() => {
         this.handleButtonEnter("play");
