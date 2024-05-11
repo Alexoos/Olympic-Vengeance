@@ -33,6 +33,7 @@ enum State {
   GAME = 1,
   LOSE = 2,
   CUTSCENE = 3,
+  WIN = 4,
 }
 
 class App {
@@ -119,6 +120,9 @@ class App {
           this._ennemyManager.update(this._player.getPosition());
           break;
         case State.LOSE:
+          this._scene.render();
+          break;
+        case State.WIN:
           this._scene.render();
           break;
         default:
@@ -335,38 +339,6 @@ class App {
     this._scene.attachControl();
   }
 
-  // private async _goToLose(): Promise<void> {
-  //   this._engine.displayLoadingUI();
-
-  //   //--SCENE SETUP--
-  //   this._scene.detachControl();
-  //   let scene = new Scene(this._engine);
-  //   scene.clearColor = new Color4(0, 0, 0, 1);
-  //   let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), scene);
-  //   camera.setTarget(Vector3.Zero());
-
-  //   //--GUI--
-  //   const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
-  //   const mainBtn = GUI.Button.CreateSimpleButton('mainmenu', 'MAIN MENU');
-  //   mainBtn.width = 0.2;
-  //   mainBtn.height = '40px';
-  //   mainBtn.color = 'white';
-  //   guiMenu.addControl(mainBtn);
-  //   //this handles interactions with the start button attached to the scene
-  //   mainBtn.onPointerUpObservable.add(() => {
-  //     this._goToStart();
-  //   });
-
-  //   //--SCENE FINISHED LOADING--
-  //   await scene.whenReadyAsync();
-  //   this._engine.hideLoadingUI(); //when the scene is ready, hide loading
-  //   //lastly set the current state to the lose state and set the scene to the lose scene
-  //   this._scene.dispose();
-  //   this._scene = scene;
-  //   // this.stopGoblinUpdateInterval(); // Arrêtez l'intervalle
-  //   this._state = State.LOSE;
-  // }
-
   private async _goToLose(): Promise<void> {
     this._engine.displayLoadingUI();
 
@@ -426,6 +398,71 @@ class App {
     this._scene.dispose();
     this._scene = scene;
     this._state = State.LOSE;
+  }
+
+  // App.ts
+  private async _goToWin(): Promise<void> {
+    this._engine.displayLoadingUI();
+
+    // Detach controls from the current scene before switching
+    this._scene.detachControl();
+    let scene = new Scene(this._engine);
+    scene.clearColor = new Color4(0, 0, 0, 1);
+
+    // Set up a camera for the new scene
+    let camera = new FreeCamera('winCamera', new Vector3(0, 0, -10), scene);
+    camera.setTarget(Vector3.Zero());
+    scene.activeCamera = camera; // Make sure to set the active camera
+
+    // Setup GUI
+    const guiMenu = GUI.AdvancedDynamicTexture.CreateFullscreenUI('UI');
+    guiMenu.idealHeight = 720; //fit our fullscreen ui to this height
+    const backgroundImage = new GUI.Image('background', 'background.jpg');
+    backgroundImage.width = 1; // Full width
+    backgroundImage.height = 1; // Full height
+    backgroundImage.stretch = GUI.Image.STRETCH_FILL;
+    guiMenu.addControl(backgroundImage);
+
+    // You Win Text
+    const youWinText = new GUI.TextBlock();
+    youWinText.text = 'YOU WIN';
+    youWinText.color = 'white';
+    youWinText.fontSize = 50;
+    youWinText.height = '100px';
+    youWinText.top = '-100px'; // Adjust position to be above the button
+    youWinText.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    youWinText.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    guiMenu.addControl(youWinText);
+    // Main Menu Button
+    const mainBtn = GUI.Button.CreateSimpleButton('mainmenu', 'MENU PRINCIPAL');
+    mainBtn.width = '400px';
+    mainBtn.height = '50px';
+    mainBtn.color = 'red';
+    mainBtn.cornerRadius = 20;
+    mainBtn.background = 'transparent';
+    mainBtn.fontSize = '20px';
+    mainBtn.hoverCursor = 'pointer';
+    mainBtn.paddingTop = '10px';
+    mainBtn.paddingBottom = '10px';
+    mainBtn.paddingLeft = '10px';
+    mainBtn.paddingRight = '10px';
+    mainBtn.thickness = 0;
+    mainBtn.background = 'white';
+    mainBtn.color = 'black';
+    mainBtn.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    guiMenu.addControl(mainBtn);
+    mainBtn.onPointerUpObservable.add(() => {
+      this._goToStart();
+    });
+
+    // Ensure the scene is ready before showing
+    await scene.whenReadyAsync();
+    this._engine.hideLoadingUI();
+
+    // Dispose of the old scene and update to the new one
+    this._scene.dispose();
+    this._scene = scene;
+    this._state = State.WIN; // Update the state to WIN or another appropriate state
   }
 }
 new App();

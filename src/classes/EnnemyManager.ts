@@ -44,10 +44,17 @@ class EnnemyManager {
   update(playerPosition: Vector3) {
     this.frameCounter++;
 
-    // Only update if it's a multiple of updateInterval
     if (this.frameCounter % this.updateInterval === 0) {
+      let allDead = true;
       for (const goblin of this.goblins) {
         goblin.update(playerPosition);
+        if (goblin.health > 0) {
+          allDead = false;
+        }
+      }
+
+      if (allDead) {
+        (window as any).gameApp._goToWin();
       }
     }
   }
