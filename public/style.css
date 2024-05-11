@@ -1,0 +1,3 @@
+button:focus, canvas:focus {
+    outline: none;
+}

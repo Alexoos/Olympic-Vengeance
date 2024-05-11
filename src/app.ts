@@ -172,17 +172,13 @@ class App {
     this._scene = this._cutScene;
 
     //--START LOADING AND SETTING UP THE GAME DURING THIS SCENE--
-    var finishedLoading = false;
-    await this._setUpGame().then((res) => {
-      finishedLoading = true;
-    });
+    
   }
 
   private handleButtonEnter(buttonName) : void {
     switch (buttonName) {
         case 'play':
-            this._goToCutScene();
-            this._scene.detachControl(); // Assuming `this._scene` is accessible here
+            this._goToGame();
             break;
         // Add more cases if needed for other buttons
     }
@@ -251,6 +247,10 @@ class App {
     this._scene.dispose();
     this._scene = scene;
     this._state = State.START;
+    var finishedLoading = false;
+    await this._setUpGame().then((res) => {
+      finishedLoading = true;
+    });
   }
 
 
