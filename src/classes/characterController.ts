@@ -88,12 +88,13 @@ export class Player extends TransformNode {
   static mesh: Mesh;
   static health: number;
   hacheMesh: AbstractMesh;
+  private lastLogTime: number = 0;
 
   constructor(assets, scene: Scene, shadowGenerator: ShadowGenerator, input?) {
     super('kolasis', scene);
     this.scene = scene;
     this._setupPlayerCamera();
-
+    this.lastLogTime = performance.now();
     // //set up sounds
     // this._loadSounds(this.scene);
     this.mesh = assets.mesh;
@@ -301,18 +302,40 @@ export class Player extends TransformNode {
     return this.mesh.absolutePosition;
   }
 
+  // public detectCollisions() {
+  //   // Boucle à travers tous les meshes de la scène pour vérifier les collisions avec le joueur
+  //   this.scene.meshes.forEach((otherMesh) => {
+  //     // Vérifiez si le mesh est différent du mesh du joueur
+  //     if (otherMesh !== this.mesh && otherMesh !== this.hacheMesh) {
+  //       // Vérifiez s'il y a une collision entre le mesh du joueur et le mesh actuel
+  //       if (otherMesh.name === 'Gobiln_eyes') {
+  //         if (this.hacheMesh.intersectsMesh(otherMesh, true)) {
+  //           console.log('collision avec ', otherMesh.name);
+  //         }
+  //       }
+  //     }
+  //   });
+  // }
+
   public detectCollisions() {
-    // Boucle à travers tous les meshes de la scène pour vérifier les collisions avec le joueur
-    this.scene.meshes.forEach((otherMesh) => {
-      // Vérifiez si le mesh est différent du mesh du joueur
-      if (otherMesh !== this.mesh && otherMesh !== this.hacheMesh) {
-        // Vérifiez s'il y a une collision entre le mesh du joueur et le mesh actuel
-        if (this.hacheMesh.intersectsMesh(otherMesh, true)) {
-          // Collision détectée, vous pouvez effectuer des actions ici
-          console.log('Collision avec le mesh :', otherMesh.name);
+    // Only check for collisions if the current animation is 'attack'
+    const currentTime = performance.now();
+    if (this._currentAnim === this._attack) {
+      this.scene.meshes.forEach((otherMesh) => {
+        if (otherMesh.name === 'Gobiln_eyes' && this.hacheMesh.intersectsMesh(otherMesh, true)) {
+          if (currentTime - this.lastLogTime > 2450) {
+            // Check if 2.45 seconds have passed
+            console.log(otherMesh);
+            let goblin = otherMesh.metadata.goblinInstance;
+            // goblin.dealDamage(this.damage);
+            let avant = goblin.getHealth();
+            goblin.setHealth(this.damage);
+            console.log('la vie du gobelin avant', avant, 'la vie du gobelin après --->', goblin.getHealth());
+            this.lastLogTime = currentTime; // Reset the timer
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   public setHealth(nb: number): number {

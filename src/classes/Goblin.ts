@@ -44,7 +44,7 @@ class Goblin extends TransformNode {
   moveDirection: Vector3 = Vector3.Zero();
   speed: number;
   damage: number = 10;
-  health: number = 20;
+  health: number = 50;
   attackCooldownActive: boolean = false;
   private player: Player;
 
@@ -53,6 +53,7 @@ class Goblin extends TransformNode {
   private _walk: AnimationGroup;
   private _attack: AnimationGroup;
   private _dead: AnimationGroup;
+  private attackInterval;
 
   // animation trackers
   private _currentAnim: AnimationGroup = null;
@@ -62,9 +63,11 @@ class Goblin extends TransformNode {
     super('goblinRoot', scene);
     this.scene = scene;
     this.player = player;
+    this.attackInterval = null;
   }
 
   init() {
+    this.clearAttackInterval();
     SceneLoader.ImportMesh(
       '',
       './models/goblin.glb',
@@ -76,6 +79,14 @@ class Goblin extends TransformNode {
         this.mesh.checkCollisions = true;
         this.mesh.ellipsoid = new Vector3(0.25, 0.5, 0.25);
         this.mesh.ellipsoidOffset = new Vector3(0, 0.5, 0);
+
+        this.mesh.metadata = { goblinInstance: this };
+
+        meshes.forEach((m) => {
+          if (m.name === 'Gobiln_eyes') {
+            m.metadata = { goblinInstance: this };
+          }
+        });
 
         // Setup animations after they are confirmed to be loaded
         if (animationGroups.length > 0) {
@@ -100,6 +111,10 @@ class Goblin extends TransformNode {
       this._currentAnim = animation;
       this._currentAnim.play(true);
     }
+  }
+
+  getHealth(): number {
+    return this.health;
   }
 
   private updateOrientation(): void {
@@ -202,6 +217,7 @@ class Goblin extends TransformNode {
   }
 
   updateStateBasedOnDistance() {
+    this.clearAttackInterval();
     if (this.distanceFromPlayer > SENS_DISTANCE) {
       this.states = STATES.STATE_IDLE;
     } else if (this.distanceFromPlayer > LOOK_DISTANCE) {
@@ -323,15 +339,23 @@ class Goblin extends TransformNode {
     this.moveDirection.setAll(0);
 
     // Implement attack cooldown to prevent immediate re-attack
-    if (!this.attackCooldownActive) {
-      this.attackCooldownActive = true;
-      setTimeout(() => (this.attackCooldownActive = false), 1000); // 1 second cooldown
+    if (!this.attackInterval) {
+      this.attackInterval = setInterval(() => {
+        if (this.distanceFromPlayer <= 1.5) {
+          this.dealDamage(this.player);
+        } else {
+          // If the player moves out of range, consider stopping or altering the attack
+          this.clearAttackInterval();
+          this.updateStateBasedOnDistance(); // Evaluate the next state
+        }
+      }, 1570); // 1.57 seconds interval
     }
+  }
 
-    // Check if the player has moved away
-    if (this.distanceFromPlayer > 1.5) {
-      // Determine the next state based on the distance
-      this.updateStateBasedOnDistance();
+  clearAttackInterval() {
+    if (this.attackInterval) {
+      clearInterval(this.attackInterval);
+      this.attackInterval = null;
     }
   }
 
@@ -339,22 +363,17 @@ class Goblin extends TransformNode {
     if (this.health - nb > 0) {
       this.health -= nb;
     } else {
+      console.log('Goblin is dead!');
+      this.health = 0;
       this.setAnimation(this._dead);
     }
   }
 
   dealDamage(player) {
-    // Vérifier si l'animation d'attaque est terminée, si le joueur est à la bonne distance, et si l'animation d'attaque est en cours
-    if (this._currentAnim === this._attack) {
-      // Vérifier si l'animation d'attaque est terminée
-      this._currentAnim.onAnimationEndObservable.add(() => {
-        if (this.distanceFromPlayer <= 1.5) {
-          // Appliquer des dégâts au joueur
-          let playerHealth = player.setHealth(this.damage);
-          console.log(playerHealth);
-        }
-      });
-    }
+    //  console.log(`Dealing ${this.damage} damage to the player!`);
+    const healBefore = player.health;
+    player.health -= this.damage; // Adjust based on your Player class implementation
+    //console.log(`Player health: ${healBefore} -> ${player.health}`);
   }
 }
 
