@@ -135,45 +135,6 @@ class App {
     });
   }
 
-  private async _goToCutScene(): Promise<void> {
-    this._engine.displayLoadingUI();
-    //--SETUP SCENE--
-    //dont detect any inputs from this ui while the game is loading
-    this._scene.detachControl();
-    this._cutScene = new Scene(this._engine);
-    let camera = new FreeCamera('camera1', new Vector3(0, 0, 0), this._cutScene);
-    camera.setTarget(Vector3.Zero());
-    this._cutScene.clearColor = new Color4(0, 0, 0, 1);
-
-    //--GUI--
-    const cutScene = GUI.AdvancedDynamicTexture.CreateFullscreenUI('cutscene');
-
-    //--PROGRESS DIALOGUE--
-    const next = GUI.Button.CreateSimpleButton('next', 'NEXT');
-    next.color = 'white';
-    next.thickness = 0;
-    next.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
-    next.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
-    next.width = '64px';
-    next.height = '64px';
-    next.top = '-3%';
-    next.left = '-12%';
-    cutScene.addControl(next);
-
-    next.onPointerUpObservable.add(() => {
-      this._goToGame();
-    });
-
-    //--WHEN SCENE IS FINISHED LOADING--
-    await this._cutScene.whenReadyAsync();
-    this._engine.hideLoadingUI();
-    this._scene.dispose();
-    this._state = State.CUTSCENE;
-    this._scene = this._cutScene;
-
-    //--START LOADING AND SETTING UP THE GAME DURING THIS SCENE--
-    
-  }
 
   private handleButtonEnter(buttonName) : void {
     switch (buttonName) {
