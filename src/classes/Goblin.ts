@@ -287,8 +287,8 @@ class Goblin extends TransformNode {
     } else {
       // Déplacez le gobelin de façon aléatoire
       if (now > this.nextTargetTime) {
-        let x = Scalar.RandomRange(-5, 5);
-        let z = Scalar.RandomRange(-5, 5);
+        let x = Scalar.RandomRange(-20, 20);
+        let z = Scalar.RandomRange(-20, 20);
         this.targetPosition.set(x, 0, z);
         this.nextTargetTime = now + 5000;
       }

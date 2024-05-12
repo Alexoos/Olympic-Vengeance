@@ -2,7 +2,7 @@ import { Vector3, Scalar } from '@babylonjs/core';
 import Goblin from './Goblin';
 import { Player } from './characterController';
 
-const MAX_GOBLIN = 1;
+const MAX_GOBLIN = 10;
 
 class EnnemyManager {
   goblins: Goblin[] = [];
@@ -26,7 +26,7 @@ class EnnemyManager {
       goblin.init();
 
       // Positionner le gobelin autour du joueur de manière aléatoire
-      const spawnPoint = this.generateRandomSpawnPoint(playerPosition, 10, 20);
+      const spawnPoint = this.generateRandomSpawnPoint(playerPosition, 1, 2000);
       goblin.position = spawnPoint;
 
       this.goblins.push(goblin);

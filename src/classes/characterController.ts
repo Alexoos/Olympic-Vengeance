@@ -350,7 +350,6 @@ export class Player extends TransformNode {
       this._currentAnim.stop();
       this._currentAnim = this._damage; // Ensure you have a death animation loaded
       this._currentAnim.play(false);
-      //App.updateHealthBar(this.health);
 
       if (this.health <= 0) {
         console.log('le joueur est mort');

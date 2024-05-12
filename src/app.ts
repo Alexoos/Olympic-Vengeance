@@ -53,8 +53,6 @@ export class App {
   private updateInterval: NodeJS.Timeout;
   private _input: PlayerInput;
   private _ennemyManager: EnnemyManager;
-  private healthBarValue: GUI.Rectangle;
-  static healthBarValue: any;
 
   constructor() {
     this._canvas = this._createCanvas();
@@ -63,8 +61,6 @@ export class App {
     this._engine = new Engine(this._canvas, true);
     this._scene = new Scene(this._engine);
     this._scene.collisionsEnabled = true;
-
-    this.healthBarValue = new GUI.Rectangle();
 
     // hide/show the Inspector
     window.addEventListener('keydown', (ev) => {
@@ -326,7 +322,7 @@ export class App {
     //--WHEN SCENE FINISHED LOADING--
     await scene.whenReadyAsync();
     // a modifier pour peut etre faire spawn en random ? dans la map
-    scene.getMeshByName('outer').position = new Vector3(0, 0, 0);
+    scene.getMeshByName('outer').position = new Vector3(50, 0, 18);
     //get rid of start scene, switch to gamescene and change states
     this._scene.dispose();
     this._state = State.GAME;
@@ -336,42 +332,6 @@ export class App {
 
     //the game is ready, attach control back
     this._scene.attachControl();
-
-    //--HEALTH BAR--
-    const healthBar = new GUI.Rectangle();
-    healthBar.width = '200px';
-    healthBar.height = '30px';
-    healthBar.color = 'red';
-    healthBar.thickness = 0;
-    healthBar.background = 'red';
-    playerUI.addControl(healthBar);
-
-    this.healthBarValue.width = '200px';
-    this.healthBarValue.height = '30px';
-    this.healthBarValue.color = 'green';
-    this.healthBarValue.thickness = 0;
-    playerUI.addControl(this.healthBarValue);
-
-    const healthText = new GUI.TextBlock();
-    healthText.text = '100';
-    healthText.color = 'white';
-    healthText.fontSize = 18;
-    playerUI.addControl(healthText);
-    healthText.textHorizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
-    healthText.textVerticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-
-    // Position the health bar
-    healthBar.top = 350;
-    this.healthBarValue.top = 350;
-    healthText.top = 350;
-
-    // Update the health bar value
-    App.updateHealthBar(100);
-  }
-
-  public static updateHealthBar(playerHealth: number) {
-    const healthPercentage = playerHealth / 100; // Assuming maximum health is 100
-    this.healthBarValue.width = 200 * healthPercentage + 'px'; // 200px is the total width of the health bar
   }
 
   private async _goToLose(): Promise<void> {
