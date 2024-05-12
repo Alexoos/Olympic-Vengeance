@@ -16,6 +16,7 @@ import {
   Vector3,
 } from '@babylonjs/core';
 import { PlayerInput } from './inputController';
+import { App } from '../app';
 
 export class Player extends TransformNode {
   public camera: UniversalCamera;
@@ -38,6 +39,7 @@ export class Player extends TransformNode {
   private _attack: AnimationGroup;
   private _block: AnimationGroup;
   private _damage: AnimationGroup;
+  private _dead: AnimationGroup;
   private _dash: AnimationGroup;
 
   // animation trackers
@@ -121,11 +123,13 @@ export class Player extends TransformNode {
 
     this._input = input;
 
-    this._idle = assets.animationGroups[3];
-    this._walk = assets.animationGroups[5];
-    this._run = assets.animationGroups[4];
-    this._attack = assets.animationGroups[0];
-    this._block = assets.animationGroups[1];
+    this._idle = assets.animationGroups[5];
+    this._walk = assets.animationGroups[7];
+    this._run = assets.animationGroups[6];
+    this._attack = assets.animationGroups[2];
+    this._block = assets.animationGroups[3];
+    this._damage = assets.animationGroups[4];
+    this._dead = assets.animationGroups[0];
 
     this._setUpAnimations();
 
@@ -333,7 +337,7 @@ export class Player extends TransformNode {
   private handleDeath(): void {
     // Play death animation
     this._currentAnim.stop();
-    // this._currentAnim = this._deathAnimation; // Ensure you have a death animation loaded
+    this._currentAnim = this._dead; // Ensure you have a death animation loaded
     this._currentAnim.play(false);
 
     // Disable inputs
@@ -343,17 +347,22 @@ export class Player extends TransformNode {
   public setHealth(nb: number): number {
     if (this._currentAnim !== this._block) {
       this.health -= nb;
+      this._currentAnim.stop();
+      this._currentAnim = this._damage; // Ensure you have a death animation loaded
+      this._currentAnim.play(false);
+      //App.updateHealthBar(this.health);
+
+      if (this.health <= 0) {
+        console.log('le joueur est mort');
+        this.health = 0;
+        this.isDead = true; // Set dead flag
+        this.handleDeath();
+        setTimeout(() => {
+          (window as any).gameApp._goToLose();
+        }, 2000);
+      }
+      return this.health;
     }
-    if (this.health <= 0) {
-      console.log('le joueur est mort');
-      this.health = 0;
-      this.isDead = true; // Set dead flag
-      this.handleDeath();
-      setTimeout(() => {
-        (window as any).gameApp._goToLose();
-      }, 2000);
-    }
-    return this.health;
   }
 
   public getHealth(): number {

@@ -357,7 +357,8 @@ class Goblin extends TransformNode {
 
     // Check if enough time has passed to attack again
     if (currentTime - this.lastLogTime > 2450) {
-      if (this.distanceFromPlayer <= 1.5) {
+      // Vérifiez si le gobelin est en train d'attaquer
+      if (this.distanceFromPlayer <= 1.5 && this._currentAnim === this._attack) {
         // Deal damage if the player is in range
         this.dealDamage(this.player);
         console.log('Attacking player!');

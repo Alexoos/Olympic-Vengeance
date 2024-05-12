@@ -54,7 +54,9 @@ class EnnemyManager {
       }
 
       if (allDead) {
-        (window as any).gameApp._goToWin();
+        setTimeout(() => {
+          (window as any).gameApp._goToWin();
+        }, 2000);
       }
     }
   }
