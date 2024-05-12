@@ -18,6 +18,13 @@
   "devDependencies": {
     "@babylonjs/core": "^6.42.0",
     "@babylonjs/inspector": "^6.42.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
     "html-webpack-plugin": "^5.6.0",
     "husky": "^9.0.10",
     "prettier": "^3.2.5",
