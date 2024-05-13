@@ -4,7 +4,7 @@
   "description": "Jeu Olympic Vengeance",
   "main": "src/app.ts",
   "scripts": {
-    "build": "webpack",
+    "build": "webpack --mode=production",
     "start": "webpack-dev-server --port 8080",
     "format": "npx prettier --write ."
   },
@@ -36,6 +36,8 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^12.0.2",
     "rxjs": "^7.8.1"
   }
 }

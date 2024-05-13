@@ -1,6 +1,8 @@
 const path = require('path');
 const fs = require('fs');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const appDirectory = fs.realpathSync(process.cwd());
 
 module.exports = {
@@ -31,10 +33,19 @@ module.exports = {
     ],
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      inject: true,
-      template: path.resolve(appDirectory, 'public/index.html'),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'public', globOptions: { ignore: ["**/index.html"] } } // Exclude index.html from being copied
+      ]
     }),
-  ],
+    new HtmlWebpackPlugin({
+        inject: true,
+        template: path.resolve(appDirectory, "public/index.html")
+    }),
+    new CleanWebpackPlugin(),
+],
   mode: 'development',
+  optimization: {
+    usedExports: true,
+}
 };

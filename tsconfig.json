@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "noResolve": false,
-    "noImplicitAny": false,
-    "sourceMap": true,
-    "preserveConstEnums": true,
-    "lib": ["dom", "es6"],
-    "rootDir": "src"
+      "outDir": "./dist/",
+      "rootDir": "./src/",
+      "baseUrl": "./src/",
+      "sourceMap": true,
+      "noImplicitAny": false,
+      "module": "esNext",
+      "target": "es6",
+      "moduleResolution": "node",
+      "preserveConstEnums": true,
+      "lib": [
+          "dom",
+          "es6"
+      ],
   }
 }
