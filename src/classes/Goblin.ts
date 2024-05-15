@@ -153,7 +153,7 @@ class Goblin extends TransformNode {
   // Update gravity and movement
   private _updateGroundDetection(): void {
     // Raycast pour détecter le sol
-    let groundPoint = this._floorRaycast(0, 0, 3); // Assurez-vous que le raycast est assez long
+    let groundPoint = this._floorRaycast(0, 0, 2); // Assurez-vous que le raycast est assez long
     if (!groundPoint.equals(Vector3.Zero())) {
       // Positionnez le gobelin au niveau du sol détecté
       this.mesh.position.y = groundPoint.y + 0.1; // Ajoutez une petite correction pour éviter l'enfoncement
@@ -206,12 +206,11 @@ class Goblin extends TransformNode {
     this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
     this.playerPosition = position;
 
-    this.comportement();
-
     // Calculez la distance entre le gobelin et le joueur
     this.distanceFromPlayer = Vector3.Distance(this.mesh.absolutePosition, this.playerPosition);
 
-    this.mesh.moveWithCollisions(this.moveDirection.addInPlace(this._gravity));
+    this.comportement();
+
     this.updateOrientation();
 
     // Mettez à jour la gravité et les collisions
@@ -315,7 +314,7 @@ class Goblin extends TransformNode {
       if (this.moveDirection.length() < 0.001) {
         this.moveDirection.setAll(0);
       } else {
-        this.speed = NORMAL_SPEED;
+        this.speed = NORMAL_SPEED * this._deltaTime;
         this.moveDirection.normalize();
       }
     }
@@ -334,7 +333,7 @@ class Goblin extends TransformNode {
       if (this.moveDirection.lengthSquared() < 0.001) {
         this.moveDirection.setAll(0);
       } else {
-        this.speed = SPRINT_SPEED;
+        this.speed = SPRINT_SPEED * this._deltaTime;
         this.moveDirection.normalize().scaleInPlace(this.speed);
       }
     }

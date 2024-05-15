@@ -9,7 +9,7 @@ class EnnemyManager {
   scene;
   player: Player;
   private frameCounter: number = 0; // Keeps track of the frames
-  private updateInterval: number = 6; // Set how often to update (every 10 frames)
+  private updateInterval: number = 1; // Set how often to update (every 10 frames)
 
   constructor(scene, player: Player) {
     this.scene = scene;
@@ -43,7 +43,9 @@ class EnnemyManager {
 
   update(playerPosition: Vector3) {
     this.frameCounter++;
-
+    for (const goblin of this.goblins) {
+      goblin.update(playerPosition);
+    } /*
     if (this.frameCounter % this.updateInterval === 0) {
       let allDead = true;
       for (const goblin of this.goblins) {
@@ -58,7 +60,8 @@ class EnnemyManager {
           (window as any).gameApp._goToWin();
         }, 2000);
       }
-    }
+    
+    }*/
   }
 }
 

@@ -49,8 +49,8 @@ export class Player extends TransformNode {
   private _jumped: boolean = false;
 
   //const values
-  private static NORMAL_SPEED: number = 0.17;
-  private static SPRINT_SPEED: number = 0.35;
+  private static NORMAL_SPEED: number = 0.17 * 60;
+  private static SPRINT_SPEED: number = 0.35 * 60;
   private static JUMP_FORCE: number = 0.3;
   private static GRAVITY: number = -10;
   // private static readonly DASH_FACTOR: number = 2.5;
@@ -116,7 +116,7 @@ export class Player extends TransformNode {
       }
     });
 
-    this.health = 100;
+    this.health = 1000;
     this.damage = 20;
 
     shadowGenerator.addShadowCaster(assets.mesh);
@@ -192,7 +192,7 @@ export class Player extends TransformNode {
 
     // définition de la vitesse en fonction du sprint
     let speed = this._input.sprinting ? Player.SPRINT_SPEED : Player.NORMAL_SPEED;
-    this._moveDirection = this._moveDirection.normalize().scale(speed);
+    this._moveDirection = this._moveDirection.normalize().scale(speed * this._deltaTime);
 
     // gestion de la rotation pour toujours pointer dans la direction correcte
     if (move.length() > 0) {
